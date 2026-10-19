@@ -524,8 +524,9 @@ function updateQrPreview() {
 
   const cleanColor = qrColor.replace('#', '');
   const cleanBg = qrBgColor.replace('#', '');
+  const logoParam = wheelData?.logoUrl ? `&logoUrl=${encodeURIComponent(wheelData.logoUrl)}` : '';
 
-  const qrUrl = `/api/qr/${encodeURIComponent(currentWheelId)}?color=${cleanColor}&bgColor=${cleanBg}&includeLogo=${includeLogo}&size=800`;
+  const qrUrl = `/api/qr/${encodeURIComponent(currentWheelId)}?color=${cleanColor}&bgColor=${cleanBg}&includeLogo=${includeLogo}&size=800${logoParam}&_t=${Date.now()}`;
 
   if (qrImage) qrImage.src = qrUrl;
   if (qrDownloadBtn) qrDownloadBtn.href = qrUrl;
@@ -691,10 +692,13 @@ function initAdminEvents() {
     });
   });
 
-  // Tùy chọn QR Code
+  // Tùy chọn QR Code (Cập nhật thời gian thực khi chọn màu)
   ['qrColorPicker', 'qrBgColorPicker', 'qrIncludeLogoCheck'].forEach((id) => {
     const elem = document.getElementById(id);
-    if (elem) elem.addEventListener('change', updateQrPreview);
+    if (elem) {
+      elem.addEventListener('change', updateQrPreview);
+      elem.addEventListener('input', updateQrPreview);
+    }
   });
 
   // Sao chép link khách

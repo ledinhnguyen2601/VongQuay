@@ -32,13 +32,9 @@ router.get('/:wheelId', async (req, res) => {
       themeFrame = 'none'
     } = req.query;
 
+    // Lấy thông tin vòng quay nếu có trong DB, hoặc lấy logoUrl từ query
     const wheel = await db.getWheel(wheelId);
-    if (!wheel) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vòng quay không tồn tại.'
-      });
-    }
+    const logoToUse = (wheel && wheel.logoUrl) ? wheel.logoUrl : (req.query.logoUrl || '');
 
     // Xây dựng URL trang quay cho người chơi (tuyệt đối không chứa thông tin admin)
     const host = req.get('host');
@@ -62,19 +58,19 @@ router.get('/:wheelId', async (req, res) => {
     let finalBuffer = qrBuffer;
 
     // Nếu yêu cầu chèn logo cửa hàng vào giữa QR và vòng quay có logo
-    if (includeLogo === 'true' && wheel.logoUrl) {
+    if (includeLogo === 'true' && logoToUse) {
       try {
         let logoImageBuffer = null;
 
-        if (wheel.logoUrl.startsWith('data:image')) {
+        if (logoToUse.startsWith('data:image')) {
           // Data URL
-          const base64Data = wheel.logoUrl.split(',')[1];
+          const base64Data = logoToUse.split(',')[1];
           if (base64Data) {
             logoImageBuffer = Buffer.from(base64Data, 'base64');
           }
-        } else if (wheel.logoUrl.startsWith('http://') || wheel.logoUrl.startsWith('https://')) {
+        } else if (logoToUse.startsWith('http://') || logoToUse.startsWith('https://')) {
           // Fetch từ URL
-          const fetchRes = await fetch(wheel.logoUrl);
+          const fetchRes = await fetch(logoToUse);
           if (fetchRes.ok) {
             const arrayBuf = await fetchRes.arrayBuffer();
             logoImageBuffer = Buffer.from(arrayBuf);

@@ -10,10 +10,14 @@ module.exports = (req, res) => {
   const matchedPath = req.headers['x-matched-path'];
   const originalUri = req.headers['x-now-route-matches'] || req.headers['x-forwarded-uri'];
 
-  if (matchedPath && matchedPath.startsWith('/api') && req.url !== matchedPath) {
-    req.url = matchedPath;
-  } else if (originalUri && originalUri.startsWith('/api') && req.url !== originalUri) {
-    req.url = originalUri;
+  // Bảo toàn nguyên vẹn query string từ req.url ban đầu (màu QR, size, v.v.)
+  const qIdx = req.url.indexOf('?');
+  const queryStr = qIdx !== -1 ? req.url.slice(qIdx) : '';
+
+  if (matchedPath && matchedPath.startsWith('/api')) {
+    req.url = matchedPath + (matchedPath.includes('?') ? '' : queryStr);
+  } else if (originalUri && originalUri.startsWith('/api')) {
+    req.url = originalUri + (originalUri.includes('?') ? '' : queryStr);
   }
 
   return app(req, res);

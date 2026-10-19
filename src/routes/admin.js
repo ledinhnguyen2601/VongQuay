@@ -133,12 +133,14 @@ router.put('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
     const { wheelId } = req.params;
     const { name, logoUrl, background, backgroundOpacity, segments } = req.body;
 
-    const existingWheel = await db.getWheel(wheelId);
+    let existingWheel = await db.getWheel(wheelId);
     if (!existingWheel) {
-      return res.status(404).json({
-        success: false,
-        message: 'Vòng quay không tồn tại.'
-      });
+      existingWheel = {
+        wheelId,
+        name: typeof name === 'string' ? name.trim() : 'Vòng Quay May Mắn',
+        createdAt: new Date().toISOString()
+      };
+      await db.saveWheel(wheelId, existingWheel);
     }
 
     const updates = {};
