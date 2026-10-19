@@ -47,42 +47,31 @@
   <canvas id="confettiCanvas"></canvas>
 
   <!-- Navigation Header -->
+  <!-- Navigation Header (Tối giản 100% cho khách, tích hợp lối vào Quản Trị ẩn vào Logo cửa hàng) -->
   <header class="w-full max-w-5xl mx-auto px-4 py-3 flex items-center justify-between z-30">
-    <div class="flex items-center gap-3">
-      <img id="headerLogo" src="" alt="Logo quán" class="w-10 h-10 rounded-full object-cover border-2 border-white/60 shadow hidden">
-      <div class="flex flex-col">
-        <h1 id="wheelTitle" class="text-base sm:text-lg md:text-xl font-extrabold text-white drop-shadow-md truncate max-w-[180px] sm:max-w-xs md:max-w-md">
+    <!-- Khu vực Thương Hiệu: Bấm vào Logo để vào trang Quản Trị bí mật của chủ quán -->
+    <a id="brandAdminLink" href="/create" class="flex items-center gap-3 transition-transform active:scale-95 group focus:outline-none" title="Chủ quán: Bấm vào logo để vào Quản Trị">
+      <div class="relative">
+        <img id="headerLogo" src="" alt="Logo quán" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-white/70 shadow-md hidden group-hover:ring-2 group-hover:ring-amber-400 transition">
+        <div id="defaultLogoPlaceholder" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 flex items-center justify-center text-lg shadow-md group-hover:ring-2 group-hover:ring-amber-400 transition">
+          🎡
+        </div>
+      </div>
+      <div class="flex flex-col text-left">
+        <h1 id="wheelTitle" class="text-base sm:text-lg md:text-xl font-extrabold text-white drop-shadow-md truncate max-w-[200px] sm:max-w-xs md:max-w-md group-hover:text-amber-200 transition">
           Lucky Wheel SaaS
         </h1>
         <span id="wheelSubtitle" class="text-xs text-white/80 font-medium">Chúc bạn quay trúng quà lớn!</span>
       </div>
-    </div>
+    </a>
 
-    <!-- Thanh công cụ góc phải -->
+    <!-- Thanh công cụ góc phải: Chỉ để lại nút đổi Theme tinh tế, khách chỉ tập trung quay thưởng -->
     <div class="flex items-center gap-2">
       <!-- Nút chuyển theme sáng / tối -->
       <button id="themeToggleBtn" type="button" class="btn-touch theme-toggle-btn" title="Chuyển đổi giao diện sáng/tối" aria-label="Đổi theme">
         <svg id="iconSun" class="w-5 h-5 hidden text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
         <svg id="iconMoon" class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
       </button>
-
-      <!-- Nút xem QR (chỉ hiện khi đã chọn vòng quay) -->
-      <button id="qrViewBtn" type="button" class="btn-touch px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 text-xs font-semibold shadow hidden items-center gap-1.5" title="Xem mã QR">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-        <span class="hidden sm:inline">Mã QR</span>
-      </button>
-
-      <!-- Nút chia sẻ (chỉ hiện khi đã chọn vòng quay) -->
-      <button id="shareBtn" type="button" class="btn-touch px-3 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 text-xs font-semibold shadow hidden items-center gap-1.5" title="Chia sẻ liên kết">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-        <span class="hidden sm:inline">Chia sẻ</span>
-      </button>
-
-      <!-- Nút Quản Trị -->
-      <a id="adminDirectLink" href="/create" class="btn-touch px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold shadow flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        <span>Quản Trị</span>
-      </a>
     </div>
   </header>
 
@@ -172,24 +161,7 @@
     </div>
   </div>
 
-  <!-- Modal Mã QR Vòng Quay -->
-  <div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl relative">
-      <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Mã QR Vòng Quay</h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Quét mã bằng camera để vào trang quay</p>
-      <div class="bg-white p-3 rounded-2xl shadow-inner mb-4 inline-block">
-        <img id="qrModalImage" src="" alt="Mã QR vòng quay" class="w-48 h-48 mx-auto object-contain">
-      </div>
-      <div class="flex flex-col gap-2">
-        <a id="qrDownloadLink" href="#" download="ma-qr-vong-quay.png" class="btn-touch w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow">
-          Tải Ảnh QR Xuống
-        </a>
-        <button type="button" onclick="closeQrModal()" class="btn-touch w-full py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl">
-          Đóng
-        </button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Footer tinh tế -->
   <footer class="w-full text-center py-4 text-xs text-white/70 drop-shadow z-20">

@@ -12,9 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const wheelId = urlParams.get('w');
 
-  const adminDirectLink = document.getElementById('adminDirectLink');
-  if (adminDirectLink) {
-    adminDirectLink.href = wheelId ? `/admin?w=${encodeURIComponent(wheelId)}` : '/create';
+  // Tích hợp lối vào Quản Trị ẩn vào khối Logo của chủ quán
+  const brandAdminLink = document.getElementById('brandAdminLink');
+  if (brandAdminLink) {
+    brandAdminLink.href = wheelId ? `/admin?w=${encodeURIComponent(wheelId)}` : '/create';
   }
 
   if (!wheelId) {
@@ -122,11 +123,18 @@ async function loadWheelData(wheelId) {
     }
     document.title = `${currentWheelData.name || 'Vòng Quay May Mắn'} | Lucky Wheel`;
 
-    // Áp dụng Logo nếu có
+    // Áp dụng Logo nếu có (Ẩn placeholder mặc định khi có ảnh Logo)
     const headerLogo = document.getElementById('headerLogo');
-    if (headerLogo && currentWheelData.logoUrl) {
-      headerLogo.src = currentWheelData.logoUrl;
-      headerLogo.classList.remove('hidden');
+    const defaultLogoPlaceholder = document.getElementById('defaultLogoPlaceholder');
+    if (currentWheelData.logoUrl) {
+      if (headerLogo) {
+        headerLogo.src = currentWheelData.logoUrl;
+        headerLogo.classList.remove('hidden');
+      }
+      if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.add('hidden');
+    } else {
+      if (headerLogo) headerLogo.classList.add('hidden');
+      if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.remove('hidden');
     }
 
     // Áp dụng Nền và Lớp phủ (Overlay)
@@ -134,18 +142,6 @@ async function loadWheelData(wheelId) {
 
     // Khởi tạo Canvas vòng quay
     setupWheelCanvas(currentWheelData.segments, currentWheelData.logoUrl);
-
-    // Hiển thị nút Mã QR và Chia sẻ khi đã tải xong vòng quay hợp lệ
-    const shareBtn = document.getElementById('shareBtn');
-    const qrViewBtn = document.getElementById('qrViewBtn');
-    if (shareBtn) {
-      shareBtn.classList.remove('hidden');
-      shareBtn.classList.add('flex');
-    }
-    if (qrViewBtn) {
-      qrViewBtn.classList.remove('hidden');
-      qrViewBtn.classList.add('flex');
-    }
 
     // Hiển thị giao diện chính
     if (loadingState) loadingState.classList.add('hidden');
@@ -211,8 +207,6 @@ function setupWheelCanvas(segments, logoUrl) {
 function setupInteractions(wheelId) {
   const spinBtn = document.getElementById('spinBtn');
   const centerSpinBtn = document.getElementById('centerSpinBtn');
-  const shareBtn = document.getElementById('shareBtn');
-  const qrViewBtn = document.getElementById('qrViewBtn');
 
   const executeSpin = () => {
     if (!currentWheelInstance || currentWheelInstance.isSpinning) return;
@@ -221,30 +215,6 @@ function setupInteractions(wheelId) {
 
   if (spinBtn) spinBtn.addEventListener('click', executeSpin);
   if (centerSpinBtn) centerSpinBtn.addEventListener('click', executeSpin);
-
-  // Nút chia sẻ link
-  if (shareBtn) {
-    shareBtn.addEventListener('click', () => {
-      const shareUrl = window.location.href;
-      if (navigator.share) {
-        navigator.share({
-          title: currentWheelData ? currentWheelData.name : 'Vòng Quay May Mắn',
-          text: 'Tham gia quay thưởng nhận quà ngay hôm nay!',
-          url: shareUrl
-        }).catch(() => {});
-      } else {
-        copyToClipboard(shareUrl);
-        showToast('Đã sao chép liên kết vòng quay vào bộ nhớ tạm!');
-      }
-    });
-  }
-
-  // Nút mở mã QR
-  if (qrViewBtn) {
-    qrViewBtn.addEventListener('click', () => {
-      openQrModal(wheelId);
-    });
-  }
 }
 
 /**
@@ -330,32 +300,6 @@ window.closeWinModal = function () {
   }
 };
 
-/**
- * Mở Modal QR Code
- */
-function openQrModal(wheelId) {
-  const qrModal = document.getElementById('qrModal');
-  const qrImage = document.getElementById('qrModalImage');
-  const qrDownloadLink = document.getElementById('qrDownloadLink');
-
-  const qrUrl = `/api/qr/${encodeURIComponent(wheelId)}?size=600&includeLogo=true`;
-
-  if (qrImage) qrImage.src = qrUrl;
-  if (qrDownloadLink) qrDownloadLink.href = qrUrl;
-
-  if (qrModal) {
-    qrModal.classList.remove('hidden');
-    qrModal.classList.add('flex');
-  }
-}
-
-window.closeQrModal = function () {
-  const qrModal = document.getElementById('qrModal');
-  if (qrModal) {
-    qrModal.classList.add('hidden');
-    qrModal.classList.remove('flex');
-  }
-};
 
 /**
  * Sao chép text vào clipboard

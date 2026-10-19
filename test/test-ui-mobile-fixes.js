@@ -17,6 +17,14 @@ assert(!indexHtml.includes('(?w=...)'), 'LỖI: index.html vẫn còn chuỗi k�
 assert(!indexHtml.includes('kiểm tra lại đường link có gắn mã'), 'LỖI: index.html vẫn còn thông báo cũ gây bối rối');
 console.log('✅ [PASS]: Đã loại bỏ hoàn toàn chữ kỹ thuật (?w=...) khỏi giao diện Chào mừng.');
 
+// Kiểm tra ẩn hoàn toàn các nút Quản trị, QR, Chia sẻ ở giao diện khách
+assert(!indexHtml.includes('id="adminDirectLink"'), 'LỖI: Vẫn còn nút Quản trị lộ thiên trên giao diện khách');
+assert(!indexHtml.includes('id="qrViewBtn"'), 'LỖI: Vẫn còn nút Mã QR lộ thiên trên giao diện khách');
+assert(!indexHtml.includes('id="shareBtn"'), 'LỖI: Vẫn còn nút Chia sẻ lộ thiên trên giao diện khách');
+assert(indexHtml.includes('id="brandAdminLink"'), 'LỖI: Chưa tích hợp lối vào Quản Trị ẩn vào Logo quán');
+console.log('✅ [PASS]: Đã ẩn 100% nút Quản trị, Mã QR, Chia sẻ khỏi mắt khách hàng.');
+console.log('✅ [PASS]: Đã tích hợp lối vào Quản Trị ẩn tinh tế trực tiếp vào Logo của quán (#brandAdminLink).');
+
 // 2. Kiểm tra ngắt dòng thông minh splitTextIntoLines trong wheel.js
 const wheelJs = fs.readFileSync(path.join(__dirname, '../public/js/wheel.js'), 'utf8');
 assert(wheelJs.includes('splitTextIntoLines'), 'LỖI: wheel.js thiếu hàm splitTextIntoLines');
