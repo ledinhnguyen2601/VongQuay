@@ -1,0 +1,418 @@
+[
+  {
+    "id": "bg-tet-nguyen-dan-1",
+    "name": "Tết Nguyên Đán - Hoa Mai & Đào Vàng Đỏ",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "linear-gradient(135deg, #b71c1c 0%, #d32f2f 40%, #ff8f00 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tet-nguyen-dan-2",
+    "name": "Tết Nguyên Đán - Lễ Hội Pháo Hoa",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "radial-gradient(circle at 50% 30%, #ffd54f 0%, #c62828 55%, #4a0007 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tet-duong-lich",
+    "name": "Tết Dương Lịch - Đón Chào Năm Mới",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "linear-gradient(135deg, #0d1b2a 0%, #1b263b 40%, #415a77 75%, #e0a96d 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-gio-to-hung-vuong",
+    "name": "Giỗ Tổ Hùng Vương - Trống Đồng Đông Sơn",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "linear-gradient(135deg, #3e2723 0%, #5d4037 45%, #8d6e63 80%, #d7ccc8 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-giai-phong-30-4",
+    "name": "30/4 Giải Phóng Miền Nam - Cờ Đỏ Sao Vàng",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "linear-gradient(135deg, #b71c1c 0%, #c2185b 50%, #f57f17 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-quoc-te-lao-dong",
+    "name": "1/5 Quốc Tế Lao Động - Vinh Quang & Nhiệt Huyết",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "linear-gradient(135deg, #e65100 0%, #f57c00 50%, #ffb74d 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-quoc-khanh-2-9",
+    "name": "Quốc Khánh 2/9 - Hào Khí Độc Lập",
+    "category": "holiday_vn",
+    "type": "css",
+    "value": "radial-gradient(circle at center, #d50000 0%, #8e0000 65%, #3e0000 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-valentine-14-2",
+    "name": "Valentine 14/2 - Trái Tim Lãng Mạn",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ff4081 0%, #f50057 50%, #c51162 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-quoc-te-phu-nu-8-3",
+    "name": "8/3 Quốc Tế Phụ Nữ - Nắng Hồng Ngọt Ngào",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #f06292 0%, #ba68c8 50%, #7986cb 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-ngay-cua-me",
+    "name": "Ngày Của Mẹ - Ấm Áp Yêu Thương",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ffb300 0%, #ff80ab 60%, #ce93d8 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-quoc-te-thieu-nhi",
+    "name": "1/6 Quốc Tế Thiếu Nhi - Sắc Màu Vui Nhộn",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #00e676 0%, #00b0ff 50%, #ffd600 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-gia-dinh-vn",
+    "name": "28/6 Ngày Gia Đình VN - Mái Ấm Bình Yên",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #00897b 0%, #4db6ac 50%, #80cbc4 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-thuong-binh-liet-si",
+    "name": "27/7 Tri Ân Liệt Sĩ - Tôn Kính Biếc Xanh",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-trung-thu",
+    "name": "Tết Trung Thu - Đêm Trăng Rằm Rực Rỡ",
+    "category": "memorial",
+    "type": "css",
+    "value": "radial-gradient(circle at 80% 20%, #fff176 0%, #ff9800 35%, #212121 85%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-phu-nu-vn-20-10",
+    "name": "20/10 Phụ Nữ VN - Hoa Sen Duyên Dáng",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ec407a 0%, #ab47bc 50%, #5c6bc0 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-nha-giao-vn-20-11",
+    "name": "20/11 Nhà Giáo VN - Trang Sách Tri Thức",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #1565c0 0%, #1e88e5 50%, #42a5f5 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-giang-sinh",
+    "name": "Giáng Sinh Noel - Đêm Tuyết & Cây Thông",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #1b5e20 0%, #2e7d32 40%, #c62828 85%, #b71c1c 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-giang-sinh-vang",
+    "name": "Giáng Sinh - Ánh Đèn Chuông Vàng",
+    "category": "memorial",
+    "type": "css",
+    "value": "radial-gradient(circle at top right, #ffd700 0%, #8b0000 60%, #1a0000 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-halloween",
+    "name": "Halloween - Bí Ngô Ma Quái",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ff6d00 0%, #ff3d00 35%, #212121 80%, #000000 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-black-friday",
+    "name": "Black Friday - Bão Giảm Giá Siêu Khủng",
+    "category": "memorial",
+    "type": "css",
+    "value": "linear-gradient(135deg, #111111 0%, #1f1f1f 40%, #e50914 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-countdown-year",
+    "name": "Countdown - Ánh Kim Năm Mới",
+    "category": "memorial",
+    "type": "css",
+    "value": "radial-gradient(circle at center, #ffd700 0%, #b8860b 45%, #1c1402 90%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tra-sua-boba-1",
+    "name": "Trà Sữa - Trân Châu Đường Đen Vui Tươi",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ffcc80 0%, #d7ccc8 40%, #4e342e 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tra-sua-matcha",
+    "name": "Trà Sữa - Matcha Kem Cheese",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #558b2f 0%, #7cb342 45%, #fff9c4 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tra-sua-dao",
+    "name": "Trà Đào Cam Sả - Thanh Mát Trái Cây",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ff7043 0%, #ffab91 50%, #ffe082 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tra-sua-khoai-mon",
+    "name": "Trà Sữa - Khoai Môn Pastel Ngọt Dịu",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #ba68c8 0%, #e1bee7 55%, #f3e5f5 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-ca-phe-rang-xay",
+    "name": "Cà Phê - Hạt Rang Nồng Nàn",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #3e2723 0%, #4e342e 50%, #6d4c41 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-ca-phe-latte",
+    "name": "Cà Phê - Cà Phê Muối & Latte Nghệ Thuật",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #8d6e63 0%, #bcaaa4 50%, #efebe9 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-tiem-banh-ngot",
+    "name": "Tiệm Bánh - Bánh Ngọt Bakery",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #f48fb1 0%, #f8bbd0 50%, #fff8e1 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-nha-hang-bbq",
+    "name": "Nhà Hàng - Lửa Nướng BBQ Hấp Dẫn",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #bf360c 0%, #e64a19 50%, #ff8a65 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-quan-an-dem",
+    "name": "Phố Ăn Đêm - Neon Đêm Phố Thị",
+    "category": "shop_theme",
+    "type": "css",
+    "value": "linear-gradient(135deg, #120024 0%, #280b45 50%, #f72585 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-sunset",
+    "name": "Gradient - Hoàng Hôn Rực Rỡ (Sunset Vibe)",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-cyberpunk",
+    "name": "Gradient - Cyberpunk Neon Tương Lai",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #0575e6 0%, #00f260 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-deep-ocean",
+    "name": "Gradient - Đại Dương Sâu Thẳm",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #09203f 0%, #537895 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-aurora",
+    "name": "Gradient - Cực Quang Bắc Cực (Aurora)",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-royal-purple",
+    "name": "Gradient - Tím Hoàng Gia Sang Trọng",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-passion-fire",
+    "name": "Gradient - Ngọn Lửa Đam Mê",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #f12711 0%, #f5af19 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-midnight-sky",
+    "name": "Gradient - Trời Đêm Kỳ Ảo",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #2c3e50 0%, #3498db 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-fresh-mint",
+    "name": "Gradient - Bạc Hà Mát Lạnh",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-gold-glory",
+    "name": "Gradient - Kim Cương & Vàng Ánh Kim",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-grad-mystic-dark",
+    "name": "Gradient - Đêm Huyền Bí Xuyên Không",
+    "category": "gradient",
+    "type": "css",
+    "value": "linear-gradient(135deg, #141e30 0%, #243b55 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-solid-dark-obsidian",
+    "name": "Màu Trơn - Đá Obsidian Tối Giản",
+    "category": "solid",
+    "type": "css",
+    "value": "#121214",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-solid-navy",
+    "name": "Màu Trơn - Xanh Navy Tinh Tế",
+    "category": "solid",
+    "type": "css",
+    "value": "#0f172a",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-solid-emerald",
+    "name": "Màu Trơn - Ngọc Lục Bảo (Emerald)",
+    "category": "solid",
+    "type": "css",
+    "value": "#064e3b",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-solid-burgundy",
+    "name": "Màu Trơn - Đỏ Rượu Vang Quý Tộc",
+    "category": "solid",
+    "type": "css",
+    "value": "#4c0519",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-solid-slate",
+    "name": "Màu Trơn - Xám Slate Hiện Đại",
+    "category": "solid",
+    "type": "css",
+    "value": "#1e293b",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-pattern-polka-dots",
+    "name": "Họa Tiết - Chấm Bi Vui Tươi Pastel",
+    "category": "pattern",
+    "type": "css",
+    "value": "radial-gradient(#ffffff22 2px, transparent 2px), linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-pattern-grid-tech",
+    "name": "Họa Tiết - Lưới Kỹ Thuật Số (Cyber Grid)",
+    "category": "pattern",
+    "type": "css",
+    "value": "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-pattern-waves",
+    "name": "Họa Tiết - Gợn Sóng Nước Mềm Mại",
+    "category": "pattern",
+    "type": "css",
+    "value": "radial-gradient(ellipse at 50% 100%, #38bdf8 0%, #0369a1 50%, #082f49 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-pattern-diagonal-stripes",
+    "name": "Họa Tiết - Đường Sọc Chéo Thể Thao",
+    "category": "pattern",
+    "type": "css",
+    "value": "repeating-linear-gradient(45deg, #1e293b, #1e293b 10px, #334155 10px, #334155 20px)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-minimalist-warm-linen",
+    "name": "Tối Giản - Giấy Lụa Ấm Áp",
+    "category": "minimalist",
+    "type": "css",
+    "value": "linear-gradient(135deg, #292524 0%, #1c1917 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-minimalist-monochrome",
+    "name": "Tối Giản - Đen Trắng Studio",
+    "category": "minimalist",
+    "type": "css",
+    "value": "radial-gradient(circle at center, #27272a 0%, #09090b 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  },
+  {
+    "id": "bg-minimalist-deep-forest",
+    "name": "Tối Giản - Rừng Thông Yên Tĩnh",
+    "category": "minimalist",
+    "type": "css",
+    "value": "linear-gradient(180deg, #064e3b 0%, #022c22 100%)",
+    "overlay": "rgba(0, 0, 0, 0.25)"
+  }
+]

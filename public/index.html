@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vòng Quay May Mắn | Lucky Wheel SaaS</title>
+  <meta name="description" content="Vòng quay may mắn dành cho các cửa hàng, quán trà sữa, sự kiện tri ân khách hàng trúng thưởng bảo mật cao.">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="relative flex flex-col min-h-screen selection:bg-indigo-500 selection:text-white">
+
+  <!-- Lớp hiển thị ảnh/màu nền -->
+  <div id="bgLayer" class="bg-layer"></div>
+  <!-- Lớp phủ làm mờ nền 20% - 30% để chữ luôn dễ đọc -->
+  <div id="bgOverlay" class="bg-overlay" style="opacity: 0.25;"></div>
+
+  <!-- Pháo hoa giấy Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Navigation Header -->
+  <header class="w-full max-w-5xl mx-auto px-4 py-3 flex items-center justify-between z-30">
+    <div class="flex items-center gap-3">
+      <img id="headerLogo" src="" alt="Logo quán" class="w-10 h-10 rounded-full object-cover border-2 border-white/60 shadow hidden">
+      <div class="flex flex-col">
+        <h1 id="wheelTitle" class="text-lg md:text-xl font-extrabold text-white drop-shadow-md truncate max-w-[200px] sm:max-w-xs md:max-w-md">
+          Đang tải vòng quay...
+        </h1>
+        <span class="text-xs text-white/80 font-medium">Chúc bạn quay trúng quà lớn!</span>
+      </div>
+    </div>
+
+    <!-- Thanh công cụ góc phải -->
+    <div class="flex items-center gap-2">
+      <!-- Nút chuyển theme sáng / tối -->
+      <button id="themeToggleBtn" type="button" class="btn-touch theme-toggle-btn" title="Chuyển đổi giao diện sáng/tối" aria-label="Đổi theme">
+        <svg id="iconSun" class="w-5 h-5 hidden text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <svg id="iconMoon" class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+      </button>
+
+      <!-- Nút xem QR -->
+      <button id="qrViewBtn" type="button" class="btn-touch px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 text-xs font-semibold shadow flex items-center gap-1.5" title="Xem mã QR">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+        <span class="hidden sm:inline">Mã QR</span>
+      </button>
+
+      <!-- Nút chia sẻ -->
+      <button id="shareBtn" type="button" class="btn-touch px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white backdrop-blur-md border border-white/30 text-xs font-semibold shadow flex items-center gap-1.5" title="Chia sẻ liên kết">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+        <span class="hidden sm:inline">Chia sẻ</span>
+      </button>
+
+      <!-- Nút Đăng nhập Admin -->
+      <a id="adminDirectLink" href="#" class="btn-touch px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold shadow flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <span>Quản Trị</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Nội dung trung tâm -->
+  <main class="flex-1 flex flex-col items-center justify-center p-4 z-20 w-full max-w-lg mx-auto">
+
+    <!-- Trạng thái đang tải -->
+    <div id="loadingState" class="flex flex-col items-center gap-3 py-16">
+      <div class="w-12 h-12 border-4 border-white/30 border-t-amber-400 rounded-full animate-spin"></div>
+      <p class="text-sm font-semibold text-white drop-shadow">Đang chuẩn bị vòng quay...</p>
+    </div>
+
+    <!-- Trạng thái chưa có tham số vòng quay (Empty State) -->
+    <div id="emptyState" class="hidden text-center p-8 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-sm">
+      <div class="w-16 h-16 mx-auto mb-4 bg-amber-100 dark:bg-amber-950/60 text-amber-600 rounded-2xl flex items-center justify-center text-3xl">
+        🎡
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Chưa chọn vòng quay!</h2>
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-6">
+        Bạn có thể tạo một vòng quay mới cho cửa hàng hoặc kiểm tra lại đường link có chứa mã vòng quay (?w=...).
+      </p>
+      <a href="/create" class="btn-touch w-full py-3 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-extrabold rounded-xl shadow-lg transition">
+        Tạo Vòng Quay Miễn Phí
+      </a>
+    </div>
+
+    <!-- Thông báo lỗi khi không tìm thấy vòng quay -->
+    <div id="errorAlert" class="hidden text-center p-6 bg-red-900/80 backdrop-blur-md rounded-2xl text-white border border-red-500/50 shadow-xl max-w-sm">
+      <p id="errorMsg" class="text-sm font-semibold mb-4">Không thể tải vòng quay này.</p>
+      <a href="/create" class="btn-touch inline-block px-4 py-2 bg-white text-red-900 text-xs font-bold rounded-lg shadow">
+        Tạo Vòng Quay Mới
+      </a>
+    </div>
+
+    <!-- Khu vực Vòng Quay Canvas -->
+    <div id="mainContent" class="hidden w-full flex flex-col items-center">
+      <div class="wheel-container">
+        <!-- Kim chỉ mũi tên (Pointer) mạ vàng 3D -->
+        <div id="wheelPointer" class="wheel-pointer">
+          <svg width="42" height="52" viewBox="0 0 42 52" fill="none">
+            <path d="M21 52L2.5 12C0.5 7.5 3.8 2 8.7 2H33.3C38.2 2 41.5 7.5 39.5 12L21 52Z" fill="url(#pointerGold)" stroke="#FFFFFF" stroke-width="2" />
+            <circle cx="21" cy="14" r="5" fill="#FFFFFF" />
+            <defs>
+              <linearGradient id="pointerGold" x1="2" y1="2" x2="40" y2="52" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFD700" />
+                <stop offset="0.5" stop-color="#FFA000" />
+                <stop offset="1" stop-color="#D84315" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <!-- Canvas Vòng Quay -->
+        <canvas id="wheelCanvas" width="460" height="460"></canvas>
+
+        <!-- Nút bấm quay ở tâm (Center Spin Button) -->
+        <button id="centerSpinBtn" class="center-spin-btn btn-touch" aria-label="Bấm vào đây để quay">
+          QUAY
+        </button>
+      </div>
+
+      <!-- Nút quay lớn bên dưới dành cho màn hình di động -->
+      <div class="w-full mt-6 px-4">
+        <button id="spinBtn" type="button" class="btn-touch w-full py-4 px-8 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 active:scale-98 text-slate-950 font-black text-lg tracking-wider uppercase rounded-2xl shadow-2xl border-2 border-yellow-200 transition duration-150">
+          QUAY NGAY 🎁
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Chúc Mừng Trúng Thưởng -->
+  <div id="winModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white dark:bg-slate-900 border border-amber-400/40 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl relative animate-prize-bounce">
+      <div class="w-20 h-20 mx-auto -mt-14 mb-3 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center text-4xl shadow-xl border-4 border-white dark:border-slate-800">
+        🎉
+      </div>
+      <h3 class="text-xs uppercase font-extrabold tracking-widest text-amber-500 mb-1">CHÚC MỪNG BẠN ĐÃ TRÚNG</h3>
+      <p id="prizeResultText" class="text-2xl font-black text-slate-900 dark:text-white my-3 px-2 leading-tight">
+        ...
+      </p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">
+        Hãy chụp lại màn hình hoặc đưa điện thoại cho nhân viên để nhận quà nhé!
+      </p>
+      <button type="button" onclick="closeWinModal()" class="btn-touch w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-bold rounded-xl shadow-lg">
+        Tuyệt Vời, Cảm Ơn!
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Mã QR Vòng Quay -->
+  <div id="qrModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl relative">
+      <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">Mã QR Vòng Quay</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Quét mã bằng camera để vào trang quay</p>
+      <div class="bg-white p-3 rounded-2xl shadow-inner mb-4 inline-block">
+        <img id="qrModalImage" src="" alt="Mã QR vòng quay" class="w-48 h-48 mx-auto object-contain">
+      </div>
+      <div class="flex flex-col gap-2">
+        <a id="qrDownloadLink" href="#" download="ma-qr-vong-quay.png" class="btn-touch w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow">
+          Tải Ảnh QR Xuống
+        </a>
+        <button type="button" onclick="closeQrModal()" class="btn-touch w-full py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer tinh tế -->
+  <footer class="w-full text-center py-4 text-xs text-white/70 drop-shadow z-20">
+    <p>© Lucky Wheel SaaS - Nền tảng vòng quay may mắn bảo mật cao</p>
+  </footer>
+
+  <script src="/js/wheel.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // Tự động gán link trang quản trị cho nút ở header
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const w = params.get('w');
+      const adminLink = document.getElementById('adminDirectLink');
+      if (adminLink) {
+        adminLink.href = w ? `/create?w=${encodeURIComponent(w)}#admin` : '/create';
+      }
+    });
+  </script>
+</body>
+</html>

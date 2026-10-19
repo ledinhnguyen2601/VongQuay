@@ -1,0 +1,11 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "history": {
+      "$wheelId": {
+        ".indexOn": "timestamp"
+      }
+    }
+  }
+}

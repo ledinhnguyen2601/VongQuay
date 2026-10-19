@@ -1,0 +1,35 @@
+{
+  "name": "lucky-wheel-saas",
+  "version": "1.0.0",
+  "description": "Lucky Wheel SaaS - Nền tảng vòng quay may mắn đa cửa hàng bảo mật cao",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test:spin": "node test/test-spin.js",
+    "test:security": "node test/test-security.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "firebase-admin": "^12.7.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nanoid": "^3.3.8",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.33.5"
+  },
+  "keywords": [
+    "lucky-wheel",
+    "saas",
+    "express",
+    "firebase",
+    "security"
+  ],
+  "author": "Senior Full-Stack Engineer",
+  "license": "ISC"
+}
