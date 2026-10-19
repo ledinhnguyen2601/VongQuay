@@ -239,10 +239,21 @@ class LuckyWheel {
       ctx.fillStyle = seg.color || '#4f46e5';
       ctx.fill();
 
-      // Viền cánh quạt mạ kim sang trọng
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      // Nếu là ô trúng thưởng vừa quay vào -> Thêm viền vàng nổi bật (Golden Highlight)
+      if (this.winningIndex === i) {
+        ctx.save();
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 14;
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        // Viền cánh quạt mạ kim sang trọng
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
 
       // 2. Vẽ chữ trên cánh quạt (Tối ưu thụt vào trong cách mép an toàn để mũi kim không bao giờ che chữ)
       ctx.save();
@@ -385,22 +396,26 @@ class LuckyWheel {
 
     const anglePerSegment = (Math.PI * 2) / numSegments;
 
-    // Kim chỉ nằm ở góc 12 giờ (top) = -Math.PI / 2
+    // Kim chỉ cắm tại đỉnh 12 giờ (top) = 3 * Math.PI / 2 (270 độ)
+    // Căn chuẩn xác 100% vào chính giữa ô quà (đường phân giác góc của ô targetIndex)
+    // Tuyệt đối KHÔNG dao động ngẫu nhiên làm kim xê dịch sang vạch mép ô khác
     const targetCenterAngle = (targetIndex + 0.5) * anglePerSegment;
-    // Thêm dao động ngẫu nhiên nhỏ trong ô (-25% đến +25%)
-    const randomJitter = (Math.random() - 0.5) * (anglePerSegment * 0.5);
-
-    let targetAngle = (3 * Math.PI) / 2 - targetCenterAngle + randomJitter;
+    const targetAngle = (3 * Math.PI) / 2 - targetCenterAngle;
 
     // Số vòng quay tối thiểu tăng theo thời gian để tốc độ quay tự nhiên
     const minSpins = Math.floor(durationMs / 1000) * 1.6 + 4;
     const extraRotations = minSpins * Math.PI * 2;
 
     const startRotation = this.currentRotation % (Math.PI * 2);
-    const totalRotationTarget = startRotation + extraRotations + (targetAngle - startRotation + Math.PI * 4) % (Math.PI * 2);
+    // Tính toán góc quay chuẩn xác luôn tiến về phía trước theo chiều kim đồng hồ
+    const diffAngle = ((targetAngle - startRotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    const totalRotationTarget = startRotation + extraRotations + diffAngle;
 
     const startTime = performance.now();
     let lastSegmentPassed = -1;
+
+    // Reset lại ô trúng thưởng cũ khi bắt đầu quay mới
+    this.winningIndex = -1;
 
     // Hàm Easing Cubic Ease-Out siêu mượt
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
@@ -430,6 +445,16 @@ class LuckyWheel {
       } else {
         // Hoàn thành quay
         this.isSpinning = false;
+        this.currentRotation = totalRotationTarget; // Chốt chính xác góc đích
+        this.winningIndex = targetIndex; // Đánh dấu ô trúng thưởng để highlight
+        this.draw(); // Vẽ lại để hiển thị viền vàng rực rỡ tại ô trúng
+
+        // Đảm bảo gỡ class tick để mũi kim luôn thẳng đứng 100% vào tâm ô
+        const pointer = document.getElementById('wheelPointer');
+        if (pointer) {
+          pointer.classList.remove('tick');
+        }
+
         this.playWinSound();
         this.triggerConfetti();
 

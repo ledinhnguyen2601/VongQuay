@@ -348,6 +348,12 @@ window.closeWinModal = function () {
     ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
   }
 
+  // Reset viền highlight trên vòng quay khi đóng popup
+  if (currentWheelInstance) {
+    currentWheelInstance.winningIndex = -1;
+    currentWheelInstance.draw();
+  }
+
   // Đảm bảo các nút quay luôn sẵn sàng cho lượt chơi tiếp theo
   const spinBtn = document.getElementById('spinBtn');
   const centerSpinBtn = document.getElementById('centerSpinBtn');
