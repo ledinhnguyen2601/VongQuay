@@ -290,7 +290,7 @@ function handleSpinSuccess(prize) {
 }
 
 /**
- * Đóng Modal trúng thưởng
+ * Đóng Modal trúng thưởng và dọn dẹp canvas pháo hoa
  */
 window.closeWinModal = function () {
   const winModal = document.getElementById('winModal');
@@ -298,7 +298,58 @@ window.closeWinModal = function () {
     winModal.classList.add('hidden');
     winModal.classList.remove('flex');
   }
+
+  // Dọn sạch Canvas pháo hoa ngay lập tức khi đóng popup
+  const confettiCanvas = document.getElementById('confettiCanvas');
+  if (confettiCanvas) {
+    const ctx = confettiCanvas.getContext('2d');
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  }
+
+  // Đảm bảo các nút quay luôn sẵn sàng cho lượt chơi tiếp theo
+  const spinBtn = document.getElementById('spinBtn');
+  const centerSpinBtn = document.getElementById('centerSpinBtn');
+  if (spinBtn) {
+    spinBtn.disabled = false;
+    spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+  }
+  if (centerSpinBtn) {
+    centerSpinBtn.disabled = false;
+  }
 };
+
+// Gắn sự kiện đa chạm cho nút đóng modal và vùng nền
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('closeWinModalBtn');
+  const winModal = document.getElementById('winModal');
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.closeWinModal();
+    });
+    closeBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.closeWinModal();
+    });
+  }
+
+  if (winModal) {
+    winModal.addEventListener('click', (e) => {
+      if (e.target === winModal) {
+        window.closeWinModal();
+      }
+    });
+  }
+
+  // Hỗ trợ phím ESC trên máy tính
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && winModal && !winModal.classList.contains('hidden')) {
+      window.closeWinModal();
+    }
+  });
+});
 
 
 /**

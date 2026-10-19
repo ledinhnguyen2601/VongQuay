@@ -17,9 +17,18 @@ const {
   createWheelLimiter,
   spinLimiter
 } = require('../middleware/rateLimiter');
-const backgrounds = require('../data/backgrounds.json');
-
 const router = express.Router();
+
+/**
+ * GET /api/health - Kiểm tra trạng thái máy chủ
+ */
+router.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'Lucky Wheel SaaS'
+  });
+});
 
 /**
  * 6 Ô quà mẫu mặc định khi một cửa hàng mới tạo vòng quay

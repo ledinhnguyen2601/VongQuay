@@ -142,9 +142,9 @@
     </div>
   </main>
 
-  <!-- Modal Chúc Mừng Trúng Thưởng -->
-  <div id="winModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
-    <div class="bg-white dark:bg-slate-900 border border-amber-400/40 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl relative animate-prize-bounce">
+  <!-- Modal Chúc Mừng Trúng Thưởng (Lớp trên cùng tuyệt đối z-[9999] để nhận chạm 100% trên điện thoại) -->
+  <div id="winModal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white dark:bg-slate-900 border border-amber-400/40 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl relative animate-prize-bounce" onclick="event.stopPropagation()">
       <div class="w-20 h-20 mx-auto -mt-14 mb-3 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center text-4xl shadow-xl border-4 border-white dark:border-slate-800">
         🎉
       </div>
@@ -155,7 +155,7 @@
       <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">
         Hãy chụp lại màn hình hoặc đưa điện thoại cho nhân viên để nhận quà nhé!
       </p>
-      <button type="button" onclick="closeWinModal()" class="btn-touch w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 font-bold rounded-xl shadow-lg">
+      <button id="closeWinModalBtn" type="button" class="btn-touch w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 font-bold rounded-xl shadow-lg active:scale-95 transition">
         Tuyệt Vời, Cảm Ơn!
       </button>
     </div>

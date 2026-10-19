@@ -205,10 +205,11 @@ body {
   filter: grayscale(0.2);
 }
 
-/* Modal Popup trúng thưởng */
+/* Modal Popup trúng thưởng (Nằm trên cùng tuyệt đối z-index 9999 để nút bấm luôn ăn chạm 100%) */
 .modal-backdrop {
   background-color: var(--modal-backdrop);
   backdrop-filter: blur(8px);
+  z-index: 9999;
 }
 
 /* Nút chuyển theme sáng/tối */
@@ -237,12 +238,12 @@ body {
   animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Canvas Confetti pháo hoa */
+/* Canvas Confetti pháo hoa (Nằm ở z-index 30, phía sau modal trúng thưởng để không chặn click) */
 #confettiCanvas {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 999;
+  z-index: 30;
 }
