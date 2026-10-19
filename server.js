@@ -88,11 +88,17 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // 4. Rate Limiter chung cho tất cả các endpoint API
 app.use('/api', generalApiLimiter);
 
-// 5. Đăng ký các API Routes
+// 5. Đăng ký các API Routes chuẩn
 app.use('/api', publicRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', uploadRoutes);
 app.use('/api/qr', qrRoutes);
+
+// Dự phòng tương thích serverless nếu Vercel rewrite đã strip bỏ tiền tố /api
+app.use('/admin', adminRoutes);
+app.use('/admin', uploadRoutes);
+app.use('/qr', qrRoutes);
+app.use('/wheels', publicRoutes);
 
 // 6. Phục vụ Static Files cho Frontend (Vô hiệu hóa cache trong dev để luôn cập nhật JS/HTML mới nhất)
 app.use(
@@ -157,8 +163,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 10. Khởi chạy máy chủ (Lắng nghe port trên local dev; trên Vercel Serverless sẽ được gọi trực tiếp qua handler)
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+// 10. Khởi chạy máy chủ (Chỉ lắng nghe port khi chạy trực tiếp file này; trên Vercel Serverless sẽ được import qua handler)
+if (require.main === module) {
   app.listen(config.port, () => {
     console.log(`\n======================================================`);
     console.log(`🎉 [LUCKY WHEEL SAAS] Máy chủ đang hoạt động tại:`);

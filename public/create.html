@@ -200,7 +200,13 @@
           body: JSON.stringify({ name, password })
         });
 
-        const data = await res.json();
+        const text = await res.text();
+        let data = {};
+        try {
+          data = JSON.parse(text);
+        } catch (parseErr) {
+          throw new Error(res.ok ? 'Phản hồi từ máy chủ không hợp lệ.' : `Lỗi máy chủ (${res.status}). Vui lòng thử lại sau giây lát.`);
+        }
 
         if (!res.ok || !data.success) {
           throw new Error(data.message || 'Không thể tạo vòng quay. Vui lòng thử lại.');

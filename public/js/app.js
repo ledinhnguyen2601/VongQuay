@@ -117,7 +117,13 @@ async function loadWheelData(wheelId) {
 
   try {
     const res = await fetch(`/api/wheels/${encodeURIComponent(wheelId)}`);
-    const data = await res.json();
+    const text = await res.text();
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch (parseErr) {
+      throw new Error(res.ok ? 'Phản hồi từ máy chủ không hợp lệ.' : `Lỗi máy chủ (${res.status}). Vui lòng thử lại sau.`);
+    }
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Không tìm thấy vòng quay này.');
@@ -269,7 +275,13 @@ async function performSpinRequest(wheelId) {
       headers: { 'Content-Type': 'application/json' }
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch (parseErr) {
+      throw new Error(res.ok ? 'Phản hồi từ máy chủ không hợp lệ.' : `Lỗi máy chủ (${res.status}). Vui lòng thử lại sau.`);
+    }
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Quay thưởng thất bại. Vui lòng thử lại sau.');

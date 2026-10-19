@@ -10,6 +10,18 @@ let currentAdminToken = '';
 let wheelData = null;
 let allBackgrounds = [];
 
+/**
+ * Helper phân tích JSON an toàn, chống crash khi nhận phản hồi HTML lỗi
+ */
+async function parseResponseJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error(res.ok ? 'Phản hồi từ máy chủ không hợp lệ.' : `Lỗi máy chủ (${res.status}). Vui lòng kiểm tra lại kết nối.`);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Lấy wheelId từ query (?w=...)
   const params = new URLSearchParams(window.location.search);
@@ -165,7 +177,7 @@ async function handleAdminLogin(password) {
       body: JSON.stringify({ password })
     });
 
-    const data = await res.json();
+    const data = await parseResponseJson(res);
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Mật khẩu không chính xác.');
@@ -207,7 +219,7 @@ async function loadAdminWheelData() {
       return;
     }
 
-    const data = await res.json();
+    const data = await parseResponseJson(res);
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Không thể tải dữ liệu vòng quay.');
     }
@@ -416,7 +428,7 @@ function addNewSegment() {
 async function loadBackgroundsGallery() {
   try {
     const res = await fetch('/api/backgrounds');
-    const data = await res.json();
+    const data = await parseResponseJson(res);
     if (data.success && Array.isArray(data.backgrounds)) {
       allBackgrounds = data.backgrounds;
       renderBackgroundGallery('all');
@@ -472,7 +484,7 @@ async function loadSpinHistory() {
     const res = await fetch(`/api/admin/wheels/${encodeURIComponent(currentWheelId)}/history`, {
       headers: { 'Authorization': `Bearer ${currentAdminToken}` }
     });
-    const data = await res.json();
+    const data = await parseResponseJson(res);
 
     if (!data.success || !Array.isArray(data.history) || data.history.length === 0) {
       historyList.innerHTML = '<p class="text-sm text-slate-400 py-4 text-center">Chưa có lượt quay nào được ghi nhận.</p>';
@@ -550,7 +562,7 @@ async function saveAllSettings() {
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
+    const data = await parseResponseJson(res);
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Không thể lưu cài đặt.');
@@ -585,7 +597,7 @@ async function uploadImageFile(file, type = 'logo') {
     body: formData
   });
 
-  const data = await res.json();
+  const data = await parseResponseJson(res);
 
   if (!res.ok || !data.success) {
     throw new Error(data.message || 'Tải ảnh thất bại.');
