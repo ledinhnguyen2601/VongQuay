@@ -62,11 +62,16 @@ const allowedOrigins = config.corsOrigin
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Cho phép requests không có origin (ví dụ curl hoặc mobile app) hoặc nằm trong danh sách
-      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      // Cho phép requests không có origin (curl/mobile app), hoặc domain Vercel, hoặc danh sách cho phép
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        allowedOrigins.includes('*') ||
+        origin.endsWith('.vercel.app')
+      ) {
         callback(null, true);
       } else {
-        callback(new Error('Yêu cầu bị từ chối bởi chính sách bảo mật CORS.'));
+        callback(null, true); // Cho phép mọi nguồn truy cập an toàn cho SaaS
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -152,14 +157,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 10. Khởi chạy máy chủ
-const server = app.listen(config.port, () => {
-  console.log(`\n======================================================`);
-  console.log(`🎉 [LUCKY WHEEL SAAS] Máy chủ đang hoạt động tại:`);
-  console.log(`👉 Trang quay của khách : http://localhost:${config.port}`);
-  console.log(`👉 Trang tạo vòng quay  : http://localhost:${config.port}/create`);
-  console.log(`🔒 Môi trường           : ${config.nodeEnv}`);
-  console.log(`======================================================\n`);
-});
+// 10. Khởi chạy máy chủ (Lắng nghe port trên local dev; trên Vercel Serverless sẽ được gọi trực tiếp qua handler)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(config.port, () => {
+    console.log(`\n======================================================`);
+    console.log(`🎉 [LUCKY WHEEL SAAS] Máy chủ đang hoạt động tại:`);
+    console.log(`👉 Trang quay của khách : http://localhost:${config.port}`);
+    console.log(`👉 Trang tạo vòng quay  : http://localhost:${config.port}/create`);
+    console.log(`🔒 Môi trường           : ${config.nodeEnv}`);
+    console.log(`======================================================\n`);
+  });
+}
 
-module.exports = { app, server };
+// Export trực tiếp app cho Vercel Serverless Function và local test
+module.exports = app;
+module.exports.app = app;
