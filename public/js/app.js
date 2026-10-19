@@ -106,6 +106,15 @@ async function loadWheelData(wheelId) {
   const mainContent = document.getElementById('mainContent');
   const errorAlert = document.getElementById('errorAlert');
 
+  // Thử đọc cache trước để hiển thị tức thì (Instant UI)
+  try {
+    const cachedRaw = sessionStorage.getItem(`cached_wheel_${wheelId}`);
+    if (cachedRaw) {
+      const cached = JSON.parse(cachedRaw);
+      renderWheelData(cached, wheelId);
+    }
+  } catch (e) {}
+
   try {
     const res = await fetch(`/api/wheels/${encodeURIComponent(wheelId)}`);
     const data = await res.json();
@@ -116,40 +125,18 @@ async function loadWheelData(wheelId) {
 
     currentWheelData = data.wheel;
 
-    // Áp dụng tên quán / tên vòng quay (Dùng textContent để chống XSS)
-    const wheelNameElem = document.getElementById('wheelTitle');
-    if (wheelNameElem) {
-      wheelNameElem.textContent = currentWheelData.name || 'Vòng Quay May Mắn';
-    }
-    document.title = `${currentWheelData.name || 'Vòng Quay May Mắn'} | Lucky Wheel`;
+    // Cập nhật lại cache mới nhất
+    try {
+      sessionStorage.setItem(`cached_wheel_${wheelId}`, JSON.stringify(currentWheelData));
+    } catch (e) {}
 
-    // Áp dụng Logo nếu có (Ẩn placeholder mặc định khi có ảnh Logo)
-    const headerLogo = document.getElementById('headerLogo');
-    const defaultLogoPlaceholder = document.getElementById('defaultLogoPlaceholder');
-    if (currentWheelData.logoUrl) {
-      if (headerLogo) {
-        headerLogo.src = currentWheelData.logoUrl;
-        headerLogo.classList.remove('hidden');
-      }
-      if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.add('hidden');
-    } else {
-      if (headerLogo) headerLogo.classList.add('hidden');
-      if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.remove('hidden');
-    }
+    renderWheelData(currentWheelData, wheelId);
 
-    // Áp dụng Nền và Lớp phủ (Overlay)
-    applyBackground(currentWheelData.background, currentWheelData.backgroundOpacity);
-
-    // Khởi tạo Canvas vòng quay
-    setupWheelCanvas(currentWheelData.segments, currentWheelData.logoUrl);
-
-    // Hiển thị giao diện chính
-    if (loadingState) loadingState.classList.add('hidden');
-    if (mainContent) mainContent.classList.remove('hidden');
-
-    // Thiết lập các nút tương tác
-    setupInteractions(wheelId);
+    if (errorAlert) errorAlert.classList.add('hidden');
   } catch (err) {
+    // Nếu đã render từ cache thành công thì không hiện màn hình lỗi
+    if (currentWheelData) return;
+
     if (loadingState) loadingState.classList.add('hidden');
     if (errorAlert) {
       errorAlert.classList.remove('hidden');
@@ -157,6 +144,49 @@ async function loadWheelData(wheelId) {
       if (errorMsg) errorMsg.textContent = err.message;
     }
   }
+}
+
+/**
+ * Render dữ liệu vòng quay lên màn hình
+ */
+function renderWheelData(data, wheelId) {
+  currentWheelData = data;
+  const loadingState = document.getElementById('loadingState');
+  const mainContent = document.getElementById('mainContent');
+
+  // Áp dụng tên quán / tên vòng quay (Dùng textContent để chống XSS)
+  const wheelNameElem = document.getElementById('wheelTitle');
+  if (wheelNameElem) {
+    wheelNameElem.textContent = data.name || 'Vòng Quay May Mắn';
+  }
+  document.title = `${data.name || 'Vòng Quay May Mắn'} | Lucky Wheel`;
+
+  // Áp dụng Logo nếu có (Ẩn placeholder mặc định khi có ảnh Logo)
+  const headerLogo = document.getElementById('headerLogo');
+  const defaultLogoPlaceholder = document.getElementById('defaultLogoPlaceholder');
+  if (data.logoUrl) {
+    if (headerLogo) {
+      headerLogo.src = data.logoUrl;
+      headerLogo.classList.remove('hidden');
+    }
+    if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.add('hidden');
+  } else {
+    if (headerLogo) headerLogo.classList.add('hidden');
+    if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.remove('hidden');
+  }
+
+  // Áp dụng Nền và Lớp phủ (Overlay)
+  applyBackground(data.background, data.backgroundOpacity);
+
+  // Khởi tạo Canvas vòng quay
+  setupWheelCanvas(data.segments, data.logoUrl);
+
+  // Hiển thị giao diện chính
+  if (loadingState) loadingState.classList.add('hidden');
+  if (mainContent) mainContent.classList.remove('hidden');
+
+  // Thiết lập các nút tương tác
+  setupInteractions(wheelId);
 }
 
 /**

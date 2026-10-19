@@ -17,14 +17,16 @@ const {
   createWheelLimiter,
   spinLimiter
 } = require('../middleware/rateLimiter');
+const backgrounds = require('../data/backgrounds.json');
 const router = express.Router();
 
 /**
- * GET /api/health - Kiểm tra trạng thái máy chủ
+ * GET /api/health - Kiểm tra trạng thái máy chủ & Kết nối Database
  */
 router.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
+    database: db.isUsingFirebase() ? 'firebase-realtime-database' : 'fallback-persistent-store',
     timestamp: new Date().toISOString(),
     service: 'Lucky Wheel SaaS'
   });

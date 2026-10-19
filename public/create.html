@@ -110,6 +110,26 @@
         <!-- Thông báo lỗi hiển thị trực tiếp trong trang (Không alert) -->
         <div id="createErrorMsg" class="hidden p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs font-medium"></div>
 
+        <!-- Khối thông báo thành công sau khi tạo -->
+        <div id="createSuccessBox" class="hidden p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-slate-800 dark:text-slate-100 space-y-3">
+          <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
+            <span>🎉</span>
+            <span>Khởi tạo vòng quay thành công!</span>
+          </div>
+          <div class="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-emerald-200 dark:border-emerald-800 text-xs flex justify-between items-center">
+            <span class="text-slate-500">Mã vòng quay:</span>
+            <span id="createdWheelIdText" class="font-mono font-bold text-indigo-600 dark:text-indigo-400">...</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <a id="btnGoToAdmin" href="#" class="btn-touch py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-center text-xs shadow">
+              ⚙️ Vào Cài Đặt Quản Trị
+            </a>
+            <a id="btnGoToPlay" href="#" class="btn-touch py-2.5 px-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-center text-xs shadow">
+              🎡 Xem Trang Khách Quay
+            </a>
+          </div>
+        </div>
+
         <button
           id="createWheelBtn"
           type="submit"
@@ -159,6 +179,10 @@
     const createForm = document.getElementById('createWheelForm');
     const errorMsg = document.getElementById('createErrorMsg');
     const createBtn = document.getElementById('createWheelBtn');
+    const successBox = document.getElementById('createSuccessBox');
+    const createdWheelIdText = document.getElementById('createdWheelIdText');
+    const btnGoToAdmin = document.getElementById('btnGoToAdmin');
+    const btnGoToPlay = document.getElementById('btnGoToPlay');
 
     createForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -182,15 +206,62 @@
           throw new Error(data.message || 'Không thể tạo vòng quay. Vui lòng thử lại.');
         }
 
-        // Tự động lưu token admin vào sessionStorage
+        // 1. Tự động lưu token admin vào sessionStorage
         sessionStorage.setItem(`admin_token_${data.wheelId}`, data.token);
 
-        // Chuyển hướng ngay tới trang vòng quay người chơi
-        window.location.href = `/?w=${encodeURIComponent(data.wheelId)}`;
+        // 2. Lưu vào danh sách vòng quay của tôi trên trình duyệt
+        try {
+          const raw = localStorage.getItem('my_created_wheels');
+          let list = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(list)) list = [];
+          list = list.filter(item => item.wheelId !== data.wheelId);
+          list.unshift({
+            wheelId: data.wheelId,
+            name: name,
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem('my_created_wheels', JSON.stringify(list));
+        } catch (e) {}
+
+        // 3. Cache thông tin cơ bản để trang quay hiển thị tức thì không bị chớp lỗi
+        try {
+          const initialWheelCache = {
+            wheelId: data.wheelId,
+            name: name,
+            logoUrl: '',
+            background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            backgroundOpacity: 0.25,
+            segments: [
+              { id: 'seg_1', text: 'Giảm 20% Hóa Đơn', color: '#EF4444' },
+              { id: 'seg_2', text: 'Miễn Phí 1 Topping', color: '#F97316' },
+              { id: 'seg_3', text: 'Voucher 50.000đ', color: '#EAB308' },
+              { id: 'seg_4', text: 'Chúc Bạn May Mắn', color: '#64748B' },
+              { id: 'seg_5', text: 'Giảm 10.000đ', color: '#10B981' },
+              { id: 'seg_6', text: '1 Ly Trà Sữa Free', color: '#06B6D4' }
+            ]
+          };
+          sessionStorage.setItem(`cached_wheel_${data.wheelId}`, JSON.stringify(initialWheelCache));
+        } catch (e) {}
+
+        // 4. Cập nhật nút điều hướng và hiển thị box thành công
+        const playUrl = `/?w=${encodeURIComponent(data.wheelId)}`;
+        const adminUrl = `/admin?w=${encodeURIComponent(data.wheelId)}`;
+
+        createdWheelIdText.textContent = data.wheelId;
+        btnGoToAdmin.href = adminUrl;
+        btnGoToPlay.href = playUrl;
+
+        successBox.classList.remove('hidden');
+        createBtn.classList.add('hidden');
+
+        // Tự động chuyển đến bảng quản trị sau 1.5 giây
+        setTimeout(() => {
+          window.location.href = adminUrl;
+        }, 1500);
+
       } catch (err) {
         errorMsg.textContent = err.message;
         errorMsg.classList.remove('hidden');
-      } finally {
         createBtn.disabled = false;
         createBtn.textContent = 'Khởi Tạo Vòng Quay Ngay 🚀';
       }

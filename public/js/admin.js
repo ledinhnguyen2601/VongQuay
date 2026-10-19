@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSection = document.getElementById('adminSection');
     if (warning) warning.classList.remove('hidden');
     if (adminSection) adminSection.classList.add('hidden');
+
+    // Khởi tạo form nhập wheelId và danh sách gần đây
+    initNoWheelHandlers();
     return;
   }
 
@@ -35,6 +38,90 @@ document.addEventListener('DOMContentLoaded', () => {
     showLoginForm();
   }
 });
+
+/**
+ * Xử lý khi chưa có wheelId trên URL
+ */
+function initNoWheelHandlers() {
+  const enterForm = document.getElementById('enterWheelIdForm');
+  const inputElem = document.getElementById('inputWheelId');
+  if (enterForm && inputElem) {
+    enterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = inputElem.value.trim();
+      if (val) {
+        window.location.href = `/admin?w=${encodeURIComponent(val)}`;
+      }
+    });
+  }
+
+  renderRecentWheels();
+}
+
+/**
+ * Hiển thị danh sách vòng quay đã tạo gần đây từ localStorage
+ */
+function renderRecentWheels() {
+  const container = document.getElementById('recentWheelsContainer');
+  const listElem = document.getElementById('recentWheelsList');
+  if (!container || !listElem) return;
+
+  try {
+    const raw = localStorage.getItem('my_created_wheels');
+    const wheels = raw ? JSON.parse(raw) : [];
+
+    if (!Array.isArray(wheels) || wheels.length === 0) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    container.classList.remove('hidden');
+    listElem.innerHTML = wheels.slice(0, 5).map(w => `
+      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 transition">
+        <div>
+          <div class="text-xs font-bold text-slate-900 dark:text-white">${escapeHtml(w.name || 'Vòng quay không tên')}</div>
+          <div class="text-[10px] font-mono text-slate-400">ID: ${escapeHtml(w.wheelId)}</div>
+        </div>
+        <div class="flex gap-2">
+          <a href="/admin?w=${encodeURIComponent(w.wheelId)}" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold">
+            Quản Trị
+          </a>
+          <a href="/?w=${encodeURIComponent(w.wheelId)}" class="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
+            Quay
+          </a>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.classList.add('hidden');
+  }
+}
+
+/**
+ * Lưu một vòng quay vào danh sách gần đây trong localStorage
+ */
+function recordWheelInRecent(wheelId, name) {
+  if (!wheelId) return;
+  try {
+    const raw = localStorage.getItem('my_created_wheels');
+    let list = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(list)) list = [];
+
+    // Xóa mục cũ nếu trùng
+    list = list.filter(item => item.wheelId !== wheelId);
+    // Đưa lên đầu
+    list.unshift({
+      wheelId,
+      name: name || 'Vòng quay may mắn',
+      lastAccessed: new Date().toISOString()
+    });
+    // Giới hạn 10 vòng quay
+    if (list.length > 10) list = list.slice(0, 10);
+    localStorage.setItem('my_created_wheels', JSON.stringify(list));
+  } catch (e) {
+    // Bỏ qua lỗi lưu localStorage
+  }
+}
 
 /**
  * Hiển thị form đăng nhập Admin
@@ -126,6 +213,7 @@ async function loadAdminWheelData() {
     }
 
     wheelData = data.wheel;
+    recordWheelInRecent(currentWheelId, wheelData.name);
     renderAdminUI();
     loadBackgroundsGallery();
     loadSpinHistory();

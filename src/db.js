@@ -50,19 +50,60 @@ if ((config.firebase.serviceAccountBase64 || config.firebase.serviceAccountPath)
   }
 }
 
+const os = require('os');
+
 /**
- * In-Memory Store Fallback
- * Quản lý dữ liệu trên RAM trong quá trình phát triển và kiểm thử
+ * In-Memory & File-backed Store Fallback
+ * Giữ dữ liệu trên RAM và đồng bộ xuống file tạm để chống mất mát dữ liệu
+ * khi chạy local hoặc trên môi trường Serverless (Vercel/Cloud Functions)
  */
+const FALLBACK_DB_FILE = path.join(os.tmpdir(), 'lucky_wheel_fallback_db.json');
+
 class MemoryDatabase {
   constructor() {
     this.wheels = new Map(); // key: wheelId -> wheel object
     this.history = new Map(); // key: wheelId -> array of history records
+    this.loadFromDisk();
+  }
+
+  loadFromDisk() {
+    try {
+      if (fs.existsSync(FALLBACK_DB_FILE)) {
+        const raw = fs.readFileSync(FALLBACK_DB_FILE, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed.wheels && Array.isArray(parsed.wheels)) {
+          this.wheels = new Map(parsed.wheels);
+        }
+        if (parsed.history && Array.isArray(parsed.history)) {
+          this.history = new Map(parsed.history);
+        }
+      }
+    } catch (e) {
+      // Bỏ qua lỗi đọc file nếu rỗng hoặc hỏng
+    }
+  }
+
+  saveToDisk() {
+    try {
+      const dump = {
+        wheels: Array.from(this.wheels.entries()),
+        history: Array.from(this.history.entries()),
+        savedAt: new Date().toISOString()
+      };
+      fs.writeFileSync(FALLBACK_DB_FILE, JSON.stringify(dump), 'utf8');
+    } catch (e) {
+      // Không để lỗi ghi file tạm làm crash ứng dụng
+    }
   }
 
   async getWheel(wheelId) {
     if (!wheelId || typeof wheelId !== 'string') return null;
-    const wheel = this.wheels.get(wheelId);
+    let wheel = this.wheels.get(wheelId);
+    if (!wheel) {
+      // Thử đọc lại từ đĩa nếu instance khác vừa ghi
+      this.loadFromDisk();
+      wheel = this.wheels.get(wheelId);
+    }
     return wheel ? JSON.parse(JSON.stringify(wheel)) : null;
   }
 
@@ -74,6 +115,7 @@ class MemoryDatabase {
       updatedAt: new Date().toISOString()
     };
     this.wheels.set(wheelId, JSON.parse(JSON.stringify(toSave)));
+    this.saveToDisk();
     return toSave;
   }
 
@@ -86,6 +128,7 @@ class MemoryDatabase {
       updatedAt: new Date().toISOString()
     };
     this.wheels.set(wheelId, JSON.parse(JSON.stringify(updated)));
+    this.saveToDisk();
     return updated;
   }
 
@@ -103,10 +146,14 @@ class MemoryDatabase {
     if (list.length > 200) {
       list.pop();
     }
+    this.saveToDisk();
     return item;
   }
 
   async getSpinHistory(wheelId, limit = 50) {
+    if (!this.history.has(wheelId)) {
+      this.loadFromDisk();
+    }
     const list = this.history.get(wheelId) || [];
     return list.slice(0, limit);
   }
