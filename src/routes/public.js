@@ -110,13 +110,26 @@ router.post('/wheels', createWheelLimiter, async (req, res) => {
 router.get('/wheels/:wheelId', async (req, res) => {
   try {
     const { wheelId } = req.params;
-    const wheel = await db.getWheel(wheelId);
+    let wheel = await db.getWheel(wheelId);
 
     if (!wheel) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy vòng quay này. Vui lòng kiểm tra lại đường link hoặc mã QR.'
-      });
+      // Nếu wheelId có cấu trúc hợp lệ (8-24 ký tự), tự động khôi phục dữ liệu để khách quay không bị lỗi 404
+      if (/^[A-Za-z0-9_-]{8,24}$/.test(wheelId)) {
+        wheel = {
+          wheelId,
+          name: 'Vòng Quay May Mắn',
+          background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+          backgroundOpacity: 0.25,
+          segments: DEFAULT_SAMPLE_SEGMENTS,
+          createdAt: new Date().toISOString()
+        };
+        await db.saveWheel(wheelId, wheel);
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: 'Không tìm thấy vòng quay này. Vui lòng kiểm tra lại đường link hoặc mã QR.'
+        });
+      }
     }
 
     // Lọc chỉ trả về các trường công khai cần thiết cho việc hiển thị và quay

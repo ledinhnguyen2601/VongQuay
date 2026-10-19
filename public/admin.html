@@ -60,7 +60,7 @@
           <span>+ Tạo Vòng Quay Mới</span>
         </a>
 
-        <a id="goToPlayBtn" href="/" class="btn-touch px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+        <a id="goToPlayBtn" href="/" target="_blank" rel="noopener noreferrer" class="btn-touch px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition flex items-center gap-1.5" title="Mở trang khách quay ở tab mới">
           <span>Trang Khách Quay</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
         </a>
@@ -113,7 +113,14 @@
       </div>
     </div>
 
-    <section id="adminSection" class="space-y-8">
+    <!-- Trạng thái đang tải dữ liệu Admin -->
+    <div id="adminLoadingState" class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+      <p class="text-sm font-bold text-slate-600 dark:text-slate-300">Đang tải bảng quản trị vòng quay...</p>
+      <p class="text-xs text-slate-400 mt-1">Đồng bộ an toàn dữ liệu từ máy chủ</p>
+    </div>
+
+    <section id="adminSection" class="hidden space-y-8">
       <!-- Banner tiêu đề & Thao tác nhanh -->
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 bg-gradient-to-r from-indigo-900 to-slate-900 rounded-3xl text-white shadow-xl">
         <div>

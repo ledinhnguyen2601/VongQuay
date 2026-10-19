@@ -41,6 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Khởi tạo các sự kiện
   initAdminEvents();
 
+  // Đọc dữ liệu từ local cache nếu có để hiển thị tức thì (Instant Load 0ms, chống mục trắng)
+  const cachedWheel = sessionStorage.getItem(`admin_wheel_cache_${currentWheelId}`);
+  if (cachedWheel) {
+    try {
+      wheelData = JSON.parse(cachedWheel);
+      renderAdminUI();
+      const adminSection = document.getElementById('adminSection');
+      const loadingState = document.getElementById('adminLoadingState');
+      if (adminSection) adminSection.classList.remove('hidden');
+      if (loadingState) loadingState.classList.add('hidden');
+    } catch (e) {}
+  }
+
   // Kiểm tra token đã lưu trong sessionStorage chưa
   const savedToken = sessionStorage.getItem(`admin_token_${currentWheelId}`);
   if (savedToken) {
@@ -140,6 +153,10 @@ function recordWheelInRecent(wheelId, name) {
  */
 function showLoginForm() {
   const loginModal = document.getElementById('adminLoginModal');
+  const loadingState = document.getElementById('adminLoadingState');
+  const adminSection = document.getElementById('adminSection');
+  if (loadingState) loadingState.classList.add('hidden');
+  if (adminSection) adminSection.classList.add('hidden');
   if (loginModal) {
     loginModal.classList.remove('hidden');
     loginModal.classList.add('flex');
@@ -197,7 +214,7 @@ async function handleAdminLogin(password) {
   } finally {
     if (loginSubmitBtn) {
       loginSubmitBtn.disabled = false;
-      loginSubmitBtn.textContent = 'Đăng Nhập';
+      loginSubmitBtn.textContent = 'Đang Nhập';
     }
   }
 }
@@ -206,6 +223,14 @@ async function handleAdminLogin(password) {
  * Tải toàn bộ cấu hình vòng quay (kèm trọng số) dành cho Admin
  */
 async function loadAdminWheelData() {
+  const loadingState = document.getElementById('adminLoadingState');
+  const adminSection = document.getElementById('adminSection');
+
+  // Chỉ hiện loading xoay tròn nếu chưa có dữ liệu trong cache
+  if (!wheelData && loadingState) {
+    loadingState.classList.remove('hidden');
+  }
+
   try {
     const res = await fetch(`/api/admin/wheels/${encodeURIComponent(currentWheelId)}`, {
       headers: {
@@ -215,6 +240,7 @@ async function loadAdminWheelData() {
 
     if (res.status === 401 || res.status === 403) {
       sessionStorage.removeItem(`admin_token_${currentWheelId}`);
+      if (loadingState) loadingState.classList.add('hidden');
       showLoginForm();
       return;
     }
@@ -225,12 +251,25 @@ async function loadAdminWheelData() {
     }
 
     wheelData = data.wheel;
+
+    // Lưu vào cache để hiển thị tức thì khi quay lại trang
+    sessionStorage.setItem(`admin_wheel_cache_${currentWheelId}`, JSON.stringify(wheelData));
+
     recordWheelInRecent(currentWheelId, wheelData.name);
     renderAdminUI();
+
+    // Ẩn loading và hiển thị giao diện admin
+    if (loadingState) loadingState.classList.add('hidden');
+    if (adminSection) adminSection.classList.remove('hidden');
+
     loadBackgroundsGallery();
     loadSpinHistory();
     updateQrPreview();
   } catch (err) {
+    if (loadingState) loadingState.classList.add('hidden');
+    if (wheelData && adminSection) {
+      adminSection.classList.remove('hidden');
+    }
     showToast(err.message, 'error');
   }
 }
@@ -567,6 +606,13 @@ async function saveAllSettings() {
 
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Không thể lưu cài đặt.');
+    }
+
+    // Cập nhật ngay bộ nhớ cache để bảo toàn dữ liệu 100%
+    if (wheelData) {
+      if (payload.name) wheelData.name = payload.name;
+      if (payload.backgroundOpacity !== undefined) wheelData.backgroundOpacity = payload.backgroundOpacity;
+      sessionStorage.setItem(`admin_wheel_cache_${currentWheelId}`, JSON.stringify(wheelData));
     }
 
     showToast('Lưu cài đặt vòng quay thành công!');

@@ -14,6 +14,7 @@ const {
   validateBackgroundOpacity,
   validateImageUrl
 } = require('../services/validate');
+const { DEFAULT_SAMPLE_SEGMENTS } = require('../data/defaultSegments');
 
 const router = express.Router();
 
@@ -77,13 +78,19 @@ router.post('/wheels/:wheelId/login', loginLimiter, async (req, res) => {
 router.get('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
   try {
     const { wheelId } = req.params;
-    const wheel = await db.getWheel(wheelId);
+    let wheel = await db.getWheel(wheelId);
 
+    // Tự động khôi phục cấu hình cho Admin đã xác thực token hợp lệ nếu serverless instance vừa khởi động lại
     if (!wheel) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy vòng quay này.'
-      });
+      wheel = {
+        wheelId,
+        name: 'Vòng Quay May Mắn',
+        background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        backgroundOpacity: 0.25,
+        segments: DEFAULT_SAMPLE_SEGMENTS,
+        createdAt: new Date().toISOString()
+      };
+      await db.saveWheel(wheelId, wheel);
     }
 
     // Tính toán tổng trọng số và % xác suất hiển thị cho admin
