@@ -112,7 +112,7 @@ app.get('/create', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'create.html'));
 });
 
-app.get('/admin', (req, res) => {
+app.get(['/admin', '/admin.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
