@@ -1,7 +1,7 @@
 /**
- * Lucky Wheel SaaS - Canvas Wheel Engine
- * Vẽ vòng quay may mắn chuyên nghiệp, chuẩn Retina, tính tương phản màu chữ tự động theo WCAG AA
- * Hiệu ứng âm thanh qua Web Audio API và pháo hoa Confetti.
+ * Lucky Wheel SaaS - Canvas Wheel Engine (Retina Ready)
+ * Tối ưu hiển thị chữ không bị che, tự động ngắt dòng thông minh (Multi-line wrap)
+ * Thời gian quay ngẫu nhiên biến thiên 5s - 19s tạo cảm giác chân thật và hồi hộp.
  */
 
 class LuckyWheel {
@@ -17,7 +17,7 @@ class LuckyWheel {
 
     // Trạng thái quay
     this.isSpinning = false;
-    this.currentRotation = 0; // Góc quay tính theo radian
+    this.currentRotation = 0; // Radian
     this.logoImage = null;
 
     // Âm thanh Web Audio API
@@ -57,9 +57,9 @@ class LuckyWheel {
       const osc = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(580, this.audioCtx.currentTime);
+      osc.frequency.setValueAtTime(620, this.audioCtx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(180, this.audioCtx.currentTime + 0.04);
-      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.14, this.audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.04);
       osc.connect(gain);
       gain.connect(this.audioCtx.destination);
@@ -107,7 +107,7 @@ class LuckyWheel {
     this.ctx.scale(dpr, dpr);
 
     this.center = this.size / 2;
-    this.radius = this.center - 12; // Chừa lề cho viền và bóng
+    this.radius = this.center - 10; // Chừa lề cho viền và bóng
 
     this.draw();
   }
@@ -144,8 +144,6 @@ class LuckyWheel {
   /**
    * Tính toán độ sáng tương đối (Relative Luminance - WCAG 2.1)
    * Tự động quyết định màu chữ trắng hay đen để đạt tương phản >= 4.5:1
-   * @param {string} hexColor - Mã màu HEX (#RGB hoặc #RRGGBB)
-   * @returns {string} '#FFFFFF' hoặc '#111827'
    */
   getTextContrastColor(hexColor) {
     let hex = (hexColor || '#3B82F6').replace('#', '');
@@ -156,12 +154,47 @@ class LuckyWheel {
     const g = parseInt(hex.substr(2, 2), 16) / 255;
     const b = parseInt(hex.substr(4, 2), 16) / 255;
 
-    // Công thức chuyển đổi sRGB sang Linear RGB
     const toLinear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
     const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 
-    // Ngưỡng 0.45 đảm bảo tính tương phản tối ưu
     return luminance > 0.45 ? '#111827' : '#FFFFFF';
+  }
+
+  /**
+   * Hàm ngắt dòng chữ thông minh và cân xứng nhất
+   * Đảm bảo không bao giờ bị cắt thành dấu ba chấm ...
+   */
+  splitTextIntoLines(text, maxCharsPerLine = 10) {
+    const trimmed = (text || '').trim();
+    if (trimmed.length <= maxCharsPerLine) {
+      return [trimmed];
+    }
+
+    const words = trimmed.split(/\s+/);
+    if (words.length <= 1) {
+      const mid = Math.ceil(trimmed.length / 2);
+      return [trimmed.slice(0, mid), trimmed.slice(mid)];
+    }
+
+    // Tìm vị trí ngắt từ sao cho 2 dòng có độ dài ký tự cân đối nhất
+    let bestSplitIndex = 1;
+    let minDiff = Infinity;
+    const totalLen = trimmed.length;
+
+    let currentLen = 0;
+    for (let i = 0; i < words.length - 1; i++) {
+      currentLen += words[i].length + (i > 0 ? 1 : 0);
+      const remainingLen = totalLen - currentLen - 1;
+      const diff = Math.abs(currentLen - remainingLen);
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestSplitIndex = i + 1;
+      }
+    }
+
+    const line1 = words.slice(0, bestSplitIndex).join(' ');
+    const line2 = words.slice(bestSplitIndex).join(' ');
+    return [line1, line2];
   }
 
   /**
@@ -176,7 +209,6 @@ class LuckyWheel {
     ctx.clearRect(0, 0, this.size, this.size);
 
     if (numSegments === 0) {
-      // Hiển thị vòng tròn chờ khi chưa có dữ liệu
       ctx.save();
       ctx.beginPath();
       ctx.arc(center, center, radius, 0, Math.PI * 2);
@@ -208,11 +240,11 @@ class LuckyWheel {
       ctx.fill();
 
       // Viền cánh quạt mạ kim sang trọng
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // 2. Vẽ chữ trên cánh quạt
+      // 2. Vẽ chữ trên cánh quạt (Tối ưu thụt vào trong cách mép an toàn để mũi kim không bao giờ che chữ)
       ctx.save();
       ctx.rotate(startAngle + anglePerSegment / 2);
       ctx.textAlign = 'right';
@@ -221,21 +253,29 @@ class LuckyWheel {
       // Màu chữ tối ưu theo tương phản WCAG
       ctx.fillStyle = this.getTextContrastColor(seg.color);
 
-      // Kích thước font chữ tự co theo bán kính và số ô
-      const fontSize = Math.max(12, Math.min(16, Math.floor(this.size / 26)));
-      ctx.font = `bold ${fontSize}px system-ui, -apple-system, sans-serif`;
+      // Tách chữ thành 1 hoặc 2 dòng cân xứng
+      const lines = this.splitTextIntoLines(seg.text, 10);
+      const longestLine = Math.max(...lines.map((l) => l.length));
 
-      // Cắt bớt nếu chữ quá dài để không lấn vào tâm
-      const maxTextWidth = radius * 0.58;
-      let text = seg.text || '';
-      if (ctx.measureText(text).width > maxTextWidth) {
-        while (ctx.measureText(text + '…').width > maxTextWidth && text.length > 2) {
-          text = text.slice(0, -1);
-        }
-        text += '…';
+      // Kích thước font chữ tự động điều chỉnh linh hoạt theo số ô và độ dài chữ
+      let baseFontSize = Math.max(11, Math.min(15, Math.floor(this.size / (numSegments > 8 ? 28 : 25))));
+      if (longestLine > 10) {
+        baseFontSize = Math.max(10, Math.floor(baseFontSize * (10 / longestLine)));
+      }
+      ctx.font = `800 ${baseFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+
+      // Vị trí chữ: Thụt vào cách mép ngoài an toàn (Ít nhất 44px để mũi kim 28px không bao giờ che chữ)
+      const textMarginFromEdge = Math.max(44, radius * 0.22);
+      const textX = radius - textMarginFromEdge;
+
+      if (lines.length === 1) {
+        ctx.fillText(lines[0], textX, 0);
+      } else {
+        const lineHeight = baseFontSize * 1.25;
+        ctx.fillText(lines[0], textX, -lineHeight / 2);
+        ctx.fillText(lines[1], textX, lineHeight / 2);
       }
 
-      ctx.fillText(text, radius - 20, 0);
       ctx.restore();
     }
 
@@ -264,7 +304,7 @@ class LuckyWheel {
       ctx.shadowColor = '#ffffff';
       ctx.shadowBlur = 4;
       ctx.fill();
-      ctx.shadowBlur = 0; // reset
+      ctx.shadowBlur = 0;
     }
 
     ctx.restore();
@@ -321,10 +361,11 @@ class LuckyWheel {
 
   /**
    * Bắt đầu hiệu ứng quay mượt mà về ô targetIndex do Server quyết định
+   * Thời gian quay ngẫu nhiên biến thiên từ 5s đến 19s theo yêu cầu
    * @param {number} targetIndex - Vị trí ô trúng do server trả về
-   * @param {number} durationMs - Thời gian quay (mặc định 5500ms)
+   * @param {number} customDurationMs - Thời gian quay (nếu không truyền sẽ tự random 5s - 19s)
    */
-  spinTo(targetIndex, durationMs = 5500) {
+  spinTo(targetIndex, customDurationMs = null) {
     if (this.isSpinning) return;
     this.initAudio();
 
@@ -333,27 +374,29 @@ class LuckyWheel {
 
     this.isSpinning = true;
 
+    // RANDOM THỜI GIAN QUAY THẬT SỰ (Biến thiên từ 5.0 giây đến 19.0 giây theo yêu cầu)
+    let durationMs = customDurationMs;
+    if (!durationMs) {
+      // Sinh ngẫu nhiên thực sự trong toàn dải từ 5000ms (5s) đến 19000ms (19s)
+      durationMs = Math.floor(Math.random() * (19000 - 5000 + 1)) + 5000;
+    }
+    // Đảm bảo nghiêm ngặt nằm trong dải 5s - 19s tối đa
+    durationMs = Math.min(Math.max(durationMs, 5000), 19000);
+
     const anglePerSegment = (Math.PI * 2) / numSegments;
 
-    // Kim chỉ nằm ở góc 12 giờ (top), tức là góc -Math.PI / 2 (hoặc 3*Math.PI / 2)
-    // Khi góc quay tổng thể là R, ô ở đỉnh kim chỉ là:
-    // pointerAngle = (-Math.PI/2 - R) mod 2PI
-    // Chúng ta cần: targetIndex * anglePerSegment + anglePerSegment/2 = pointerAngle
-    // => R = -Math.PI/2 - (targetIndex + 0.5) * anglePerSegment
-
+    // Kim chỉ nằm ở góc 12 giờ (top) = -Math.PI / 2
     const targetCenterAngle = (targetIndex + 0.5) * anglePerSegment;
-    // Thêm một chút dao động ngẫu nhiên nhỏ trong ô (-25% đến +25% bề rộng ô) để tạo cảm giác tự nhiên
+    // Thêm dao động ngẫu nhiên nhỏ trong ô (-25% đến +25%)
     const randomJitter = (Math.random() - 0.5) * (anglePerSegment * 0.5);
 
-    // Đích dừng tương đối trong vòng tròn
     let targetAngle = (3 * Math.PI) / 2 - targetCenterAngle + randomJitter;
 
-    // Thêm số vòng quay tối thiểu (6 đến 9 vòng đầy đủ)
-    const minSpins = 7;
+    // Số vòng quay tối thiểu tăng theo thời gian để tốc độ quay tự nhiên
+    const minSpins = Math.floor(durationMs / 1000) * 1.6 + 4;
     const extraRotations = minSpins * Math.PI * 2;
 
     const startRotation = this.currentRotation % (Math.PI * 2);
-    // Tính toán góc đích tổng cộng
     const totalRotationTarget = startRotation + extraRotations + (targetAngle - startRotation + Math.PI * 4) % (Math.PI * 2);
 
     const startTime = performance.now();
@@ -385,7 +428,7 @@ class LuckyWheel {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
-        // Đã hoàn thành quay
+        // Hoàn thành quay
         this.isSpinning = false;
         this.playWinSound();
         this.triggerConfetti();

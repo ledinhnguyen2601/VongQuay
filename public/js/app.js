@@ -135,6 +135,18 @@ async function loadWheelData(wheelId) {
     // Khởi tạo Canvas vòng quay
     setupWheelCanvas(currentWheelData.segments, currentWheelData.logoUrl);
 
+    // Hiển thị nút Mã QR và Chia sẻ khi đã tải xong vòng quay hợp lệ
+    const shareBtn = document.getElementById('shareBtn');
+    const qrViewBtn = document.getElementById('qrViewBtn');
+    if (shareBtn) {
+      shareBtn.classList.remove('hidden');
+      shareBtn.classList.add('flex');
+    }
+    if (qrViewBtn) {
+      qrViewBtn.classList.remove('hidden');
+      qrViewBtn.classList.add('flex');
+    }
+
     // Hiển thị giao diện chính
     if (loadingState) loadingState.classList.add('hidden');
     if (mainContent) mainContent.classList.remove('hidden');
@@ -263,8 +275,8 @@ async function performSpinRequest(wheelId) {
       throw new Error(data.message || 'Quay thưởng thất bại. Vui lòng thử lại sau.');
     }
 
-    // Bắt đầu hiệu ứng quay tới ô do server quyết định
-    currentWheelInstance.spinTo(data.targetIndex, 5500);
+    // Bắt đầu hiệu ứng quay tới ô do server quyết định với thời gian random thật sự 5s - 19s
+    currentWheelInstance.spinTo(data.targetIndex);
   } catch (err) {
     showToast(err.message, 'error');
     if (spinBtn) {

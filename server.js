@@ -107,17 +107,24 @@ app.use(
   })
 );
 
-// 7. Fallback cho các trang frontend HTML
+// 7. Fallback cho các trang frontend HTML (Vô hiệu hóa cache hoàn toàn để luôn nhận bản mới nhất)
+const sendNoCacheFile = (res, filePath) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(filePath);
+};
+
 app.get('/create', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'create.html'));
+  sendNoCacheFile(res, path.join(__dirname, 'public', 'create.html'));
 });
 
 app.get(['/admin', '/admin.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  sendNoCacheFile(res, path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  sendNoCacheFile(res, path.join(__dirname, 'public', 'index.html'));
 });
 
 // 8. Bắt các yêu cầu API không tồn tại (404)
