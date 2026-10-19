@@ -2,6 +2,7 @@
  * Lucky Wheel SaaS - Admin Panel Logic
  * Quản trị vòng quay may mắn: Đổi tên, Tùy biến ô quà & Trọng số, Upload ImgBB qua server,
  * Kho 50+ mẫu nền, Lịch sử đối soát và Xuất QR Code tùy biến.
+ * TUYỆT ĐỐI KHÔNG DÙNG ALERT - Toàn bộ thông báo dùng Toast/UI Inline.
  */
 
 let currentWheelId = '';
@@ -15,8 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
   currentWheelId = params.get('w');
 
   if (!currentWheelId) {
-    alert('Không xác định được mã vòng quay. Vui lòng kiểm tra lại link!');
-    window.location.href = '/create';
+    const warning = document.getElementById('noWheelWarning');
+    const adminSection = document.getElementById('adminSection');
+    if (warning) warning.classList.remove('hidden');
+    if (adminSection) adminSection.classList.add('hidden');
     return;
   }
 
@@ -85,6 +88,7 @@ async function handleAdminLogin(password) {
     sessionStorage.setItem(`admin_token_${currentWheelId}`, data.token);
 
     hideLoginForm();
+    showToast('Đăng nhập quản trị thành công!');
     loadAdminWheelData();
   } catch (err) {
     if (loginError) {
@@ -127,7 +131,7 @@ async function loadAdminWheelData() {
     loadSpinHistory();
     updateQrPreview();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   }
 }
 
@@ -139,7 +143,9 @@ function renderAdminUI() {
 
   // 1. Tên vòng quay
   const nameInput = document.getElementById('wheelNameInput');
+  const headerName = document.getElementById('adminHeaderWheelName');
   if (nameInput) nameInput.value = wheelData.name || '';
+  if (headerName) headerName.textContent = wheelData.name || 'Vòng Quay May Mắn';
 
   // 2. Logo quán
   const logoPreview = document.getElementById('logoPreview');
@@ -161,8 +167,11 @@ function renderAdminUI() {
 
   // 5. Link chơi của khách
   const playerLinkInput = document.getElementById('playerShareLink');
-  const playUrl = `${window.location.origin}/?w=${currentWheelId}`;
+  const playUrl = `${window.location.origin}/?w=${encodeURIComponent(currentWheelId)}`;
   if (playerLinkInput) playerLinkInput.value = playUrl;
+
+  const goToPlayBtn = document.getElementById('goToPlayBtn');
+  if (goToPlayBtn) goToPlayBtn.href = playUrl;
 }
 
 /**
@@ -240,7 +249,7 @@ function attachSegmentEvents() {
     btn.addEventListener('click', (e) => {
       const idx = parseInt(e.currentTarget.dataset.index, 10);
       if (wheelData.segments.length <= 2) {
-        alert('Vòng quay phải có tối thiểu 2 ô quà!');
+        showToast('Vòng quay phải có tối thiểu 2 ô quà!', 'error');
         return;
       }
       wheelData.segments.splice(idx, 1);
@@ -272,7 +281,7 @@ function normalizeWeightsTo100() {
   if (!wheelData || !wheelData.segments || wheelData.segments.length === 0) return;
   const totalWeight = wheelData.segments.reduce((acc, s) => acc + (Number(s.weight) || 0), 0);
   if (totalWeight <= 0) {
-    alert('Tổng trọng số hiện tại bằng 0, không thể chuẩn hóa!');
+    showToast('Tổng trọng số hiện tại bằng 0, không thể chuẩn hóa!', 'error');
     return;
   }
 
@@ -288,6 +297,7 @@ function normalizeWeightsTo100() {
   });
 
   renderSegmentsTable();
+  showToast('Đã chuẩn hóa tổng trọng số về 100%!');
 }
 
 /**
@@ -295,7 +305,7 @@ function normalizeWeightsTo100() {
  */
 function addNewSegment() {
   if (wheelData.segments.length >= 24) {
-    alert('Vòng quay chỉ cho phép tối đa 24 ô quà!');
+    showToast('Vòng quay chỉ cho phép tối đa 24 ô quà!', 'error');
     return;
   }
 
@@ -461,7 +471,7 @@ async function saveAllSettings() {
     showToast('Lưu cài đặt vòng quay thành công!');
     loadAdminWheelData();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, 'error');
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -551,7 +561,7 @@ function initAdminEvents() {
         updateQrPreview();
         showToast('Tải logo quán thành công!');
       } catch (err) {
-        alert(err.message);
+        showToast(err.message, 'error');
       }
     });
   }
@@ -567,7 +577,7 @@ function initAdminEvents() {
         wheelData.background = url;
         showToast('Tải nền riêng thành công!');
       } catch (err) {
-        alert(err.message);
+        showToast(err.message, 'error');
       }
     });
   }
@@ -621,10 +631,14 @@ function copyToClipboard(text) {
   }
 }
 
-function showToast(msg) {
+/**
+ * Hiển thị Toast thông báo đẹp mắt, không chặn màn hình
+ */
+function showToast(msg, type = 'success') {
   const toast = document.createElement('div');
-  toast.className = 'fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl z-50 animate-bounce border border-slate-700';
+  const bg = type === 'error' ? 'bg-rose-600 border-rose-500' : 'bg-slate-900 border-slate-700';
+  toast.className = `fixed bottom-5 right-5 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl z-50 animate-bounce border ${bg}`;
   toast.textContent = msg;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
+  setTimeout(() => toast.remove(), 3000);
 }

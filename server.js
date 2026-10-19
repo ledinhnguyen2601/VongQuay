@@ -89,12 +89,31 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin', uploadRoutes);
 app.use('/api/qr', qrRoutes);
 
-// 6. Phục vụ Static Files cho Frontend
-app.use(express.static(path.join(__dirname, 'public')));
+// 6. Phục vụ Static Files cho Frontend (Vô hiệu hóa cache trong dev để luôn cập nhật JS/HTML mới nhất)
+app.use(
+  express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+      if (
+        config.nodeEnv === 'development' ||
+        filePath.endsWith('.html') ||
+        filePath.endsWith('.js') ||
+        filePath.endsWith('.css')
+      ) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    }
+  })
+);
 
 // 7. Fallback cho các trang frontend HTML
 app.get('/create', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'create.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.get('/', (req, res) => {

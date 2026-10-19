@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Trị Vòng Quay | Lucky Wheel SaaS</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors">
+
+  <!-- Header -->
+  <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-black text-lg tracking-tight">
+          <span class="text-2xl">🎡</span> Lucky Wheel
+        </a>
+        <span class="hidden sm:inline-block text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-semibold">
+          Quản Trị Viên
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Nút chuyển theme -->
+        <button id="themeToggleBtn" type="button" class="btn-touch theme-toggle-btn" title="Chuyển đổi giao diện sáng/tối">
+          <svg id="iconSun" class="w-5 h-5 hidden text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <svg id="iconMoon" class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        </button>
+
+        <a id="goToPlayBtn" href="/" class="btn-touch px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+          <span>Xem Trang Khách Quay</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container chính Quản Trị -->
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <div id="noWheelWarning" class="hidden p-6 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-2xl text-center mb-6">
+      <h3 class="text-base font-bold text-amber-800 dark:text-amber-300">Không tìm thấy mã vòng quay</h3>
+      <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Vui lòng mở link từ trang quay hoặc tạo vòng quay mới.</p>
+      <a href="/create" class="inline-block mt-3 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow">Tạo Vòng Quay Mới</a>
+    </div>
+
+    <section id="adminSection" class="space-y-8">
+      <!-- Banner tiêu đề & Thao tác nhanh -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 bg-gradient-to-r from-indigo-900 to-slate-900 rounded-3xl text-white shadow-xl">
+        <div>
+          <span class="text-xs uppercase tracking-widest text-indigo-300 font-extrabold">Bảng Quản Trị Vòng Quay</span>
+          <h2 id="adminHeaderWheelName" class="text-2xl font-black mt-1">Đang tải...</h2>
+          <p class="text-xs text-indigo-200 mt-1">Mọi thay đổi về quà và tỷ lệ được server bảo vệ tuyệt đối.</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <button id="saveSettingsBtn" type="button" class="btn-touch flex-1 md:flex-initial px-6 py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black rounded-xl shadow-lg transition">
+            Lưu Thay Đổi
+          </button>
+        </div>
+      </div>
+
+      <!-- Khối chia sẻ liên kết người chơi -->
+      <div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-3">
+        <span class="text-xs font-bold text-slate-500 whitespace-nowrap">Link cho khách quay:</span>
+        <input id="playerShareLink" type="text" readonly class="flex-1 w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono text-indigo-600 dark:text-indigo-400">
+        <button id="copyPlayerLinkBtn" type="button" class="btn-touch px-4 py-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 text-xs font-bold rounded-lg border border-indigo-200 dark:border-indigo-800 whitespace-nowrap">
+          Sao Chép Link
+        </button>
+      </div>
+
+      <!-- Lưới 2 cột cấu hình -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- CỘT TRÁI (2/3): Quản lý ô quà & Trọng số -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Card danh sách ô quà -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Cài Đặt Ô Quà & Tỷ Lệ</h3>
+                <p class="text-xs text-slate-500">Tối thiểu 2 ô, tối đa 24 ô. Trọng số càng cao, xác suất trúng càng lớn.</p>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button id="normalizeWeightsBtn" type="button" class="btn-touch px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold" title="Tự động chia tỷ lệ về tổng 100%">
+                  Chuẩn hóa 100%
+                </button>
+                <button id="addSegmentBtn" type="button" class="btn-touch px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold">
+                  + Thêm Ô Quà
+                </button>
+              </div>
+            </div>
+
+            <!-- Danh sách các ô quà -->
+            <div id="segmentsList" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Card Kho Nền (50+ Mẫu phân nhóm) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Kho Nền Chủ Đề (50+ Mẫu)</h3>
+                <p class="text-xs text-slate-500">Lễ hội Việt Nam, Trà sữa, Cafe, Gradient và họa tiết tự sinh bằng CSS/SVG</p>
+              </div>
+
+              <!-- Nút tải nền riêng của quán -->
+              <label class="btn-touch px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold cursor-pointer">
+                <span>📁 Tải Nền Riêng</span>
+                <input id="bgFileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+              </label>
+            </div>
+
+            <!-- Thanh trượt độ mờ nền 20% - 30% -->
+            <div class="mb-4 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl flex items-center justify-between gap-4">
+              <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">Độ mờ phủ nền (Overlay):</span>
+              <div class="flex items-center gap-3 flex-1 max-w-xs">
+                <input id="bgOpacitySlider" type="range" min="20" max="30" value="25" class="w-full h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer">
+                <span id="bgOpacityValue" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 min-w-[36px]">25%</span>
+              </div>
+            </div>
+
+            <!-- Tabs phân loại nền -->
+            <div class="flex flex-wrap gap-1.5 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 text-white" data-category="all">Tất Cả</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="holiday_vn">Ngày Lễ VN 🇻🇳</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="memorial">Kỷ Niệm 🎉</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="shop_theme">Trà Sữa & Quán 🧋</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="gradient">Gradient 🌈</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="pattern">Họa Tiết 📐</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="solid">Màu Trơn 🎨</button>
+              <button type="button" class="bg-tab-btn px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200" data-category="minimalist">Tối Giản 🌿</button>
+            </div>
+
+            <!-- Lưới hiển thị nền -->
+            <div id="bgGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-72 overflow-y-auto p-1"></div>
+          </div>
+
+          <!-- Card Lịch Sử Quay (Đối soát) -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-2">Lịch Sử Khách Quay</h3>
+            <p class="text-xs text-slate-500 mb-4">Ghi nhận minh bạch trên server để tránh tranh chấp khi trao thưởng.</p>
+            <div id="historyList" class="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800"></div>
+          </div>
+        </div>
+
+        <!-- CỘT PHẢI (1/3): Tùy biến thương hiệu & QR Code -->
+        <div class="space-y-6">
+          <!-- Card Thương hiệu quán -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Thương Hiệu Quán</h3>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Tên Vòng Quay:</label>
+              <input id="wheelNameInput" type="text" maxlength="80" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Logo Quán (Hiển thị ở tâm & QR):</label>
+              <div class="flex items-center gap-3">
+                <img id="logoPreview" src="" alt="Logo" class="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-slate-700 hidden">
+                <label class="btn-touch px-4 py-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-xl border border-indigo-200 dark:border-indigo-800 cursor-pointer">
+                  <span>Tải Ảnh Logo</span>
+                  <input id="logoFileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+                </label>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-1 block">Hỗ trợ JPG, PNG, WEBP (tối đa 5MB). Server upload qua ImgBB an toàn.</span>
+            </div>
+          </div>
+
+          <!-- Card Tùy biến Mã QR -->
+          <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 text-center">
+            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Mã QR Để Khách Quét</h3>
+            <p class="text-xs text-slate-500">Mức sửa lỗi cao (H) giúp quét nhạy bén kể cả khi in ấn hoặc chèn logo.</p>
+
+            <div class="bg-white p-4 rounded-2xl shadow-inner inline-block border border-slate-200">
+              <img id="adminQrPreview" src="" alt="Mã QR" class="w-48 h-48 mx-auto object-contain">
+            </div>
+
+            <!-- Tùy chọn màu sắc QR -->
+            <div class="grid grid-cols-2 gap-3 text-left">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Màu chấm QR:</label>
+                <input id="qrColorPicker" type="color" value="#000000" class="w-full h-8 rounded-lg cursor-pointer border-0 p-0">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Màu nền QR:</label>
+                <input id="qrBgColorPicker" type="color" value="#ffffff" class="w-full h-8 rounded-lg cursor-pointer border-0 p-0">
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 text-left">
+              <input id="qrIncludeLogoCheck" type="checkbox" checked class="w-4 h-4 rounded text-indigo-600">
+              <label for="qrIncludeLogoCheck" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Chèn logo quán vào giữa mã QR</label>
+            </div>
+
+            <a id="adminQrDownloadBtn" href="#" download="qr-lucky-wheel.png" class="btn-touch w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+              Tải Ảnh QR Độ Nét Cao (PNG)
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Đăng nhập Admin -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative">
+      <div class="w-12 h-12 bg-amber-100 dark:bg-amber-950/60 text-amber-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-3">
+        🔒
+      </div>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white text-center mb-1">Xác Thực Quản Trị</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 text-center mb-4">Nhập mật khẩu admin bạn đã đặt khi tạo vòng quay này.</p>
+
+      <form id="adminLoginForm" class="space-y-4">
+        <div>
+          <input
+            id="adminPasswordInput"
+            type="password"
+            required
+            placeholder="Nhập mật khẩu quản trị..."
+            class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div id="loginError" class="hidden text-xs text-rose-500 text-center font-semibold"></div>
+
+        <button
+          id="loginSubmitBtn"
+          type="submit"
+          class="btn-touch w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow"
+        >
+          Đăng Nhập
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const w = urlParams.get('w');
+    const goToPlayBtn = document.getElementById('goToPlayBtn');
+    if (goToPlayBtn && w) {
+      goToPlayBtn.href = `/?w=${encodeURIComponent(w)}`;
+    }
+  </script>
+</body>
+</html>

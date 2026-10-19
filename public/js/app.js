@@ -1,6 +1,7 @@
 /**
  * Lucky Wheel SaaS - Client Application Logic (Trang quay thưởng cho khách)
  * Xử lý kết nối API công khai, bảo vệ chống XSS, đồng bộ theme sáng/tối.
+ * TUYỆT ĐỐI KHÔNG DÙNG ALERT.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Lấy wheelId từ URL (?w=...)
   const urlParams = new URLSearchParams(window.location.search);
   const wheelId = urlParams.get('w');
+
+  const adminDirectLink = document.getElementById('adminDirectLink');
+  if (adminDirectLink) {
+    adminDirectLink.href = wheelId ? `/admin?w=${encodeURIComponent(wheelId)}` : '/create';
+  }
 
   if (!wheelId) {
     showNoWheelState();
@@ -82,8 +88,13 @@ function updateThemeIcon() {
 function showNoWheelState() {
   const loadingState = document.getElementById('loadingState');
   const emptyState = document.getElementById('emptyState');
+  const wheelTitle = document.getElementById('wheelTitle');
+  const wheelSubtitle = document.getElementById('wheelSubtitle');
+
   if (loadingState) loadingState.classList.add('hidden');
   if (emptyState) emptyState.classList.remove('hidden');
+  if (wheelTitle) wheelTitle.textContent = 'Lucky Wheel SaaS';
+  if (wheelSubtitle) wheelSubtitle.textContent = 'Nền tảng vòng quay may mắn đa cửa hàng';
 }
 
 /**
@@ -156,7 +167,6 @@ function applyBackground(background, opacity) {
   }
 
   if (bgOverlay) {
-    // Độ mờ trong khoảng 0.20 - 0.30
     const safeOpacity = Math.min(Math.max(Number(opacity) || 0.25, 0.20), 0.30);
     bgOverlay.style.opacity = safeOpacity;
   }
@@ -256,8 +266,7 @@ async function performSpinRequest(wheelId) {
     // Bắt đầu hiệu ứng quay tới ô do server quyết định
     currentWheelInstance.spinTo(data.targetIndex, 5500);
   } catch (err) {
-    alert(err.message);
-    // Mở khóa lại nút nếu xảy ra lỗi
+    showToast(err.message, 'error');
     if (spinBtn) {
       spinBtn.disabled = false;
       spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -353,11 +362,12 @@ function copyToClipboard(text) {
 }
 
 /**
- * Hiển thị Toast thông báo nhanh
+ * Hiển thị Toast thông báo đẹp mắt, không dùng alert
  */
-function showToast(message) {
+function showToast(message, type = 'success') {
   const toast = document.createElement('div');
-  toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-full text-sm font-medium shadow-xl z-50 animate-bounce';
+  const bg = type === 'error' ? 'bg-rose-600 border border-rose-500' : 'bg-slate-900 border border-slate-700';
+  toast.className = `fixed bottom-5 left-1/2 -translate-x-1/2 ${bg} text-white px-5 py-3 rounded-full text-sm font-medium shadow-2xl z-50 animate-bounce`;
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => {
