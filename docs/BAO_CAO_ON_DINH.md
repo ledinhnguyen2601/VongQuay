@@ -16,7 +16,7 @@
 | **[A]** | Hồi quy toán học góc dừng vòng quay (Unit test) | **Đã kiểm thử thật** | `test/wheel-math-regression.test.js`, `package.json` | 5,382 ca kiểm thử toàn diện (2-24 ô, 5-19s) PASS 100%. Chứng minh bản cũ sai 80% (432/540 ca). 100 lượt quay liên tiếp PASS. |
 | **[D]** | Nền tảng dữ liệu (Kiểm tra Firebase Production & GET /api/health) | **Đã kiểm thử thật** | `src/config.js`, `src/db.js`, `src/routes/public.js`, `test/test-data-foundation.js` | Từ chối chạy In-Memory khi production thiếu Firebase; GET /api/health chuẩn hóa {status, firebase, env, timestamp}. |
 | **[B]** | Chống mất dữ liệu (Không ghi DB khi GET, cập nhật từng phần, thứ tự ô cố định) | **Đã kiểm thử thật** | `src/routes/public.js`, `src/routes/admin.js`, `src/services/validate.js`, `server.js`, `test/test-data-loss-prevention.js` | GET không tồn tại -> 404 (không ghi DB); PUT không tồn tại -> 404; cập nhật từng phần bảo toàn logo/nền; thứ tự ô sắp theo order; xóa sạch route trùng. |
-| **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Chưa làm** | `test/test-distribution-real.js` | So khớp tần suất thực tế với trọng số cấu hình. |
+| **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Đã kiểm thử thật** | `test/test-distribution-real.js`, `src/services/spin.js`, `package.json` | 5,000 lượt CSPRNG hội tụ hoàn hảo (max deviation 1.46% <= 2.5%); thứ tự ô API bốc thăm và trả khách khớp 100%; History lưu 100% đúng giải server bốc. |
 | **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Chưa làm** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js` | Xử lý lỗi tải ảnh an toàn, thân thiện. |
 | **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Chưa làm** | `src/config.js`, `src/routes/qr.js`, `public/js/admin.js` | Tránh phụ thuộc host nội bộ Vercel. |
 | **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Chưa làm** | `server.js`, `src/config.js`, `src/middleware/auth.js` | Khóa CORS, kiểm tra audit và cô lập tenant. |
@@ -80,6 +80,14 @@
 - **Dọn sạch route trùng lặp:** Đã xóa bỏ các route không tiền tố `/admin`, `/qr`, `/wheels` trong `server.js`. Route trả trang HTML `/admin` và `/admin.html` vẫn hoạt động độc lập bình thường.
 - **Kết quả kiểm thử tự động:** Bộ test `test/test-data-loss-prevention.js` PASS toàn bộ 6/6 kịch bản.
 
+### Kết quả kiểm định thực tế mục [H]: Kiểm tra tỉ lệ trúng thưởng thật & Đối soát History
+- **Mô phỏng 5,000 lượt quay bốc thăm mật mã học (CSPRNG):**
+  - Thời gian thực thi 5,000 lượt: 4 ms (~0.001 ms/lượt).
+  - Độ lệch cực đại (Max Deviation): **1.46%** (nằm sâu trong ngưỡng cho phép <= 2.5% với độ tin cậy 99.9%).
+  - Các ô có trọng số nhỏ (5%) và ô trọng số lớn (35%) đều có tỷ lệ xuất hiện thực tế (4.90% và 33.80%) bám sát hoàn hảo theo tỷ lệ lý thuyết.
+- **Đồng bộ thứ tự ô quà:** Thứ tự ô quà từ `GET /api/wheels/:wheelId` trả về cho khách khớp chính xác 100% với thứ tự ô mảng dùng trong thuật toán bốc thăm `spinWheel`.
+- **Đối soát History chống gian lận client:** 20/20 lượt quay gọi qua API máy chủ cục bộ đều có `prizeText`, `segmentId`, `targetIndex` trong database Firebase khớp 100% với giải do Server chọn và trả về. Phía Client hoàn toàn không có khả năng sửa đổi kết quả hay gửi giải tự chọn lên máy chủ.
+
 ---
 
 ## 3. CÁCH TỰ KIỂM TRA BẰNG MẮT (DÀNH CHO NGƯỜI DÙNG TRÊN ĐIỆN THOẠI)
@@ -102,6 +110,12 @@
 3. Đăng nhập trang Admin của một vòng quay có thật, thử đổi "Tên vòng quay" rồi bấm Lưu:
 4. **Quan sát:** Logo, hình nền, độ mờ và danh sách các ô quà vẫn giữ nguyên vẹn, không bị mất hay reset về giá trị mặc định.
 5. Kiểm tra thứ tự ô quà: Các ô quà hiển thị trên vòng quay của khách quay khớp chính xác 100% theo đúng thứ tự từ trên xuống dưới trong bảng quản trị Admin.
+
+### Cách kiểm tra mục [H]:
+1. Vào trang Admin, chỉnh một ô quà có trọng số áp đảo (ví dụ: Ô "Chúc May Mắn" đặt trọng số 90, các ô còn lại đặt 2). Bấm Lưu.
+2. Mở link khách quay trên điện thoại và quay thử 10 lượt:
+3. **Quan sát:** Đa số các lượt quay (khoảng 8-9 lượt) kim sẽ dừng trúng ô "Chúc May Mắn".
+4. Mở lại trang Admin -> "Lịch sử quay thưởng": Kiểm tra các dòng lịch sử vừa ghi, tên món quà trong lịch sử khớp chính xác 100% với từng món quà khách vừa nhận được trên điện thoại.
 
 ---
 

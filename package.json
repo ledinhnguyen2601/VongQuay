@@ -11,7 +11,8 @@
     "test:math": "node test/wheel-math-regression.test.js",
     "test:e2e:mobile": "node test/playwright-mobile-e2e.test.js",
     "test:data-foundation": "node test/test-data-foundation.js",
-    "test:dlp": "node test/test-data-loss-prevention.js"
+    "test:dlp": "node test/test-data-loss-prevention.js",
+    "test:distribution": "node test/test-distribution-real.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
