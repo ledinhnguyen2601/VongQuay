@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let currentWheelInstance = null;
 let currentWheelData = null;
+let interactionsInitialized = false;
+let isSpinRequestPending = false;
+let currentPendingPrize = null;
 
 /**
  * Khởi tạo Theme Sáng / Tối
@@ -217,10 +220,21 @@ function applyBackground(background, opacity) {
 }
 
 /**
- * Thiết lập Canvas vòng quay
+ * Thiết lập Canvas vòng quay (Chỉ khởi tạo DUY NHẤT 1 instance LuckyWheel)
  */
 function setupWheelCanvas(segments, logoUrl) {
   const pointer = document.getElementById('wheelPointer');
+
+  if (currentWheelInstance) {
+    if (!currentWheelInstance.isSpinning) {
+      currentWheelInstance.setSegments(segments || []);
+      if (logoUrl !== currentWheelInstance.logoUrl) {
+        currentWheelInstance.logoUrl = logoUrl || '';
+        currentWheelInstance.loadLogo(logoUrl || '');
+      }
+    }
+    return;
+  }
 
   currentWheelInstance = new LuckyWheel('wheelCanvas', {
     segments: segments || [],
@@ -231,20 +245,31 @@ function setupWheelCanvas(segments, logoUrl) {
         setTimeout(() => pointer.classList.remove('tick'), 60);
       }
     },
-    onSpinEnd: (targetIndex, prize) => {
-      handleSpinSuccess(prize);
+    onSpinEnd: (targetIndex) => {
+      // Tự kiểm tra ô dưới kim bằng tính toán toán học
+      if (currentWheelInstance && typeof currentWheelInstance.getPointerSegmentIndex === 'function') {
+        const calculatedIndex = currentWheelInstance.getPointerSegmentIndex();
+        if (calculatedIndex !== targetIndex) {
+          console.warn(`[WHEEL MISMATCH]: Ô dừng tính toán (${calculatedIndex}) khác ô server chỉ định (${targetIndex})`);
+        }
+      }
+      handleSpinSuccess(currentPendingPrize, targetIndex);
     }
   });
 }
 
 /**
- * Thiết lập các sự kiện tương tác
+ * Thiết lập các sự kiện tương tác (Chỉ gắn listener DUY NHẤT 1 lần)
  */
 function setupInteractions(wheelId) {
+  if (interactionsInitialized) return;
+  interactionsInitialized = true;
+
   const spinBtn = document.getElementById('spinBtn');
   const centerSpinBtn = document.getElementById('centerSpinBtn');
 
   const executeSpin = () => {
+    if (isSpinRequestPending) return;
     if (!currentWheelInstance || currentWheelInstance.isSpinning) return;
     performSpinRequest(wheelId);
   };
@@ -257,10 +282,14 @@ function setupInteractions(wheelId) {
  * Gọi API thực hiện quay may mắn
  */
 async function performSpinRequest(wheelId) {
+  if (isSpinRequestPending) return;
+  if (!currentWheelInstance || currentWheelInstance.isSpinning) return;
+
   const spinBtn = document.getElementById('spinBtn');
   const centerSpinBtn = document.getElementById('centerSpinBtn');
 
-  // Khóa nút bấm
+  // Khóa nút bấm ngay lập tức chống bấm đúp
+  isSpinRequestPending = true;
   if (spinBtn) {
     spinBtn.disabled = true;
     spinBtn.classList.add('opacity-75', 'cursor-not-allowed');
@@ -287,10 +316,41 @@ async function performSpinRequest(wheelId) {
       throw new Error(data.message || 'Quay thưởng thất bại. Vui lòng thử lại sau.');
     }
 
-    // Bắt đầu hiệu ứng quay tới ô do server quyết định với thời gian random thật sự 5s - 19s
-    currentWheelInstance.spinTo(data.targetIndex);
+    // Đảm bảo dữ liệu trúng thưởng chuẩn xác từ server
+    currentPendingPrize = data.prize;
+
+    let targetIndex = data.targetIndex;
+    const foundSegment = currentWheelData?.segments?.find((s) => s.id === data.prize?.id);
+
+    // Nếu không tìm thấy ô giải thưởng trong danh sách hiện tại (do cache cũ), tải lại cấu hình từ server
+    if (!foundSegment && data.prize?.id) {
+      try {
+        const syncRes = await fetch(`/api/wheels/${encodeURIComponent(wheelId)}`);
+        const syncData = await syncRes.json();
+        if (syncData.success && syncData.wheel) {
+          currentWheelData = syncData.wheel;
+          try {
+            sessionStorage.setItem(`cached_wheel_${wheelId}`, JSON.stringify(currentWheelData));
+          } catch (e) {}
+          if (currentWheelInstance) {
+            currentWheelInstance.setSegments(currentWheelData.segments || []);
+          }
+          const freshIndex = (currentWheelData.segments || []).findIndex((s) => s.id === data.prize.id);
+          if (freshIndex !== -1) {
+            targetIndex = freshIndex;
+          }
+        }
+      } catch (syncErr) {
+        console.warn('Không thể đồng bộ cấu hình mới trước khi quay:', syncErr);
+      }
+    }
+
+    // Bắt đầu hiệu ứng quay tới ô do server quyết định
+    currentWheelInstance.spinTo(targetIndex);
   } catch (err) {
     showToast(err.message, 'error');
+    isSpinRequestPending = false;
+    currentPendingPrize = null;
     if (spinBtn) {
       spinBtn.disabled = false;
       spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
@@ -304,7 +364,9 @@ async function performSpinRequest(wheelId) {
 /**
  * Xử lý khi vòng quay kết thúc
  */
-function handleSpinSuccess(prize) {
+function handleSpinSuccess(serverPrize, targetIndex) {
+  isSpinRequestPending = false;
+
   const spinBtn = document.getElementById('spinBtn');
   const centerSpinBtn = document.getElementById('centerSpinBtn');
 
@@ -317,18 +379,24 @@ function handleSpinSuccess(prize) {
     centerSpinBtn.disabled = false;
   }
 
-  // Mở Modal chúc mừng
+  // Mở Modal chúc mừng - BẮT BUỘC DÙNG data.prize từ server
   const winModal = document.getElementById('winModal');
   const prizeResultText = document.getElementById('prizeResultText');
 
+  const resolvedPrizeText = serverPrize?.text ||
+    (currentWheelData?.segments?.[targetIndex]?.text) ||
+    'Phần quà bí mật';
+
   if (prizeResultText) {
-    prizeResultText.textContent = prize.text || 'Phần quà bí mật';
+    prizeResultText.textContent = resolvedPrizeText;
   }
 
   if (winModal) {
     winModal.classList.remove('hidden');
     winModal.classList.add('flex');
   }
+
+  currentPendingPrize = null;
 }
 
 /**
@@ -355,6 +423,8 @@ window.closeWinModal = function () {
   }
 
   // Đảm bảo các nút quay luôn sẵn sàng cho lượt chơi tiếp theo
+  isSpinRequestPending = false;
+  currentPendingPrize = null;
   const spinBtn = document.getElementById('spinBtn');
   const centerSpinBtn = document.getElementById('centerSpinBtn');
   if (spinBtn) {

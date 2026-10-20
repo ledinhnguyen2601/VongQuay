@@ -18,6 +18,9 @@ const qrRoutes = require('./src/routes/qr');
 
 const app = express();
 
+// Bật trust proxy khi chạy sau Reverse Proxy (Vercel, Cloudflare) để nhận diện đúng IP thật của client
+app.set('trust proxy', 1);
+
 // 1. Cấu hình bảo mật HTTP Headers bằng Helmet
 // Thiết lập Content Security Policy (CSP) chặt chẽ, cho phép Tailwind CDN, Google Fonts, ImgBB
 app.use(

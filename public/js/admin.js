@@ -540,7 +540,8 @@ async function loadSpinHistory() {
           <span class="w-3.5 h-3.5 rounded-full" style="background-color: ${item.prizeColor || '#ffd700'}"></span>
           <span class="font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(item.prizeText)}</span>
         </div>
-        <div class="text-xs text-slate-400">
+        <div class="text-xs text-slate-400 flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2">
+          ${item.clientIp ? `<span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700/60">${escapeHtml(item.clientIp)}</span>` : ''}
           <span>${date}</span>
         </div>
       `;

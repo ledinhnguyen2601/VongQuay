@@ -186,13 +186,23 @@ router.post('/wheels/:wheelId/spin', spinLimiter, async (req, res) => {
     // Thuật toán rút thăm bằng crypto.randomInt dựa trên trọng số bảo mật tại server
     const { targetIndex, selectedSegment } = spinWheel(wheel.segments);
 
+    // Hàm lấy IP thật chuẩn xác của khách, không cắt xén sai lệch IPv6 localhost (::1)
+    const getClientIp = (request) => {
+      let ip = request.ip || request.connection?.remoteAddress || 'unknown';
+      if (typeof ip === 'string' && ip.startsWith('::ffff:')) {
+        ip = ip.substring(7);
+      }
+      return ip;
+    };
+
     // Ghi lại lịch sử quay phía máy chủ (phục vụ đối soát, thống kê)
     const spinRecord = {
       wheelId,
       segmentId: selectedSegment.id,
+      targetIndex,
       prizeText: selectedSegment.text,
       prizeColor: selectedSegment.color,
-      clientIp: req.ip ? req.ip.replace(/^.*:/, '') : 'unknown'
+      clientIp: getClientIp(req)
     };
 
     // Lưu vào database ngầm không làm chậm response

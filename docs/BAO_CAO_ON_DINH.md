@@ -11,7 +11,7 @@
 | Mã | Hạng mục | Trạng thái | File can thiệp chính | Ghi chú kiểm thử thực tế |
 | :--- | :--- | :--- | :--- | :--- |
 | **0** | Thiết lập ban đầu & Quy tắc git (`.gitattributes`) | **Đã sửa** | `.gitattributes` | Đã ép `eol=lf`, chuẩn hóa xuống dòng. |
-| **[J]** | Vòng quay hiển thị và yêu cầu quay (Single-instance, chống đúp, prize authoritative, IP thật) | **Đang làm** | `public/js/app.js`, `public/js/wheel.js`, `src/routes/public.js`, `server.js` | Đang sửa và kiểm chứng nguyên nhân gốc. |
+| **[J]** | Vòng quay hiển thị và yêu cầu quay (Single-instance, chống đúp, prize authoritative, IP thật) | **Đã sửa** | `public/js/app.js`, `public/js/wheel.js`, `src/routes/public.js`, `server.js`, `public/js/admin.js` | Khắc phục đa instance ma, chống bấm đúp, dùng data.prize từ server, sửa regex clientIp. |
 | **[K]** | Bộ kiểm thử tự động trình duyệt thật (Playwright mobile simulation) | **Chưa làm** | `package.json`, `test/playwright-e2e.test.js` | Chạy 30 lượt giả lập màn hình di động 390x844. |
 | **[A]** | Hồi quy toán học góc dừng vòng quay (Unit test) | **Chưa làm** | `test/wheel-math-regression.test.js` | Kiểm thử toán học với mọi số ô và thời lượng 5-19s. |
 | **[D]** | Nền tảng dữ liệu (Kiểm tra Firebase Production & GET /api/health) | **Chưa làm** | `src/config.js`, `src/db.js`, `src/routes/public.js` | Từ chối chạy in-memory nếu thiếu Firebase ở production. |

@@ -25,11 +25,22 @@ class LuckyWheel {
 
     // Khởi tạo kích thước Canvas
     this.resize();
-    window.addEventListener('resize', () => this.resize());
+    this.boundResize = () => this.resize();
+    window.addEventListener('resize', this.boundResize);
 
     // Tải logo nếu có
     if (this.logoUrl) {
       this.loadLogo(this.logoUrl);
+    }
+  }
+
+  /**
+   * Gỡ bỏ trình nghe sự kiện khi hủy đối tượng
+   */
+  destroy() {
+    if (this.boundResize) {
+      window.removeEventListener('resize', this.boundResize);
+      this.boundResize = null;
     }
   }
 
@@ -116,6 +127,7 @@ class LuckyWheel {
    * Tải ảnh logo cửa hàng vào tâm vòng quay
    */
   loadLogo(url) {
+    if (this.isSpinning) return;
     if (!url) {
       this.logoImage = null;
       this.draw();
@@ -137,8 +149,23 @@ class LuckyWheel {
    * Cập nhật danh sách ô quà mới
    */
   setSegments(segments) {
+    if (this.isSpinning) return;
     this.segments = segments || [];
     this.draw();
+  }
+
+  /**
+   * Tính toán chính xác chỉ số ô quà hiện đang nằm dưới kim chỉ đỉnh (12h)
+   * Phục vụ tự kiểm tra đối soát toán học
+   */
+  getPointerSegmentIndex() {
+    const numSegments = this.segments.length;
+    if (numSegments === 0) return -1;
+    const anglePerSegment = (Math.PI * 2) / numSegments;
+    const normRotation = ((this.currentRotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const pointerAngle = (3 * Math.PI) / 2;
+    const wheelAngle = ((pointerAngle - normRotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    return Math.floor(wheelAngle / anglePerSegment) % numSegments;
   }
 
   /**
