@@ -82,11 +82,13 @@
 
       <!-- Form nhập mã vòng quay -->
       <form id="enterWheelIdForm" class="flex gap-2 max-w-md mx-auto mb-6">
+        <label for="inputWheelId" class="sr-only">Mã vòng quay</label>
         <input
           id="inputWheelId"
           type="text"
           placeholder="Dán mã vòng quay (VD: abc123xyz...)"
           required
+          aria-label="Mã vòng quay"
           class="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none"
         >
         <button
@@ -141,8 +143,8 @@
 
       <!-- Khối chia sẻ liên kết người chơi -->
       <div class="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-3">
-        <span class="text-xs font-bold text-slate-500 whitespace-nowrap">Link cho khách quay:</span>
-        <input id="playerShareLink" type="text" readonly class="flex-1 w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono text-indigo-600 dark:text-indigo-400">
+        <label for="playerShareLink" class="text-xs font-bold text-slate-500 whitespace-nowrap">Link cho khách quay:</label>
+        <input id="playerShareLink" type="text" readonly aria-label="Link cho khách quay" class="flex-1 w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono text-indigo-600 dark:text-indigo-400">
         <button id="copyPlayerLinkBtn" type="button" class="btn-touch px-4 py-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 text-xs font-bold rounded-lg border border-indigo-200 dark:border-indigo-800 whitespace-nowrap">
           Sao Chép Link
         </button>
@@ -229,14 +231,14 @@
             <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Thương Hiệu Quán</h3>
 
             <div>
-              <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Tên Vòng Quay:</label>
+              <label for="wheelNameInput" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Tên Vòng Quay:</label>
               <input id="wheelNameInput" type="text" maxlength="80" class="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl">
             </div>
 
             <div>
               <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">Logo Quán (Hiển thị ở tâm & QR):</label>
               <div class="flex items-center gap-3">
-                <img id="logoPreview" src="" alt="Logo" class="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-slate-700 hidden">
+                <img id="logoPreview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Logo" class="w-12 h-12 rounded-full object-cover border-2 border-slate-300 dark:border-slate-700 hidden">
                 <label class="btn-touch px-4 py-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-xl border border-indigo-200 dark:border-indigo-800 cursor-pointer">
                   <span>Tải Ảnh Logo</span>
                   <input id="logoFileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
@@ -252,17 +254,17 @@
             <p class="text-xs text-slate-500">Mức sửa lỗi cao (H) giúp quét nhạy bén kể cả khi in ấn hoặc chèn logo.</p>
 
             <div class="bg-white p-4 rounded-2xl shadow-inner inline-block border border-slate-200">
-              <img id="adminQrPreview" src="" alt="Mã QR" class="w-48 h-48 mx-auto object-contain">
+              <img id="adminQrPreview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Mã QR" class="w-48 h-48 mx-auto object-contain">
             </div>
 
             <!-- Tùy chọn màu sắc QR -->
             <div class="grid grid-cols-2 gap-3 text-left">
               <div>
-                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Màu chấm QR:</label>
+                <label for="qrColorPicker" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Màu chấm QR:</label>
                 <input id="qrColorPicker" type="color" value="#000000" class="w-full h-8 rounded-lg cursor-pointer border-0 p-0">
               </div>
               <div>
-                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Màu nền QR:</label>
+                <label for="qrBgColorPicker" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Màu nền QR:</label>
                 <input id="qrBgColorPicker" type="color" value="#ffffff" class="w-full h-8 rounded-lg cursor-pointer border-0 p-0">
               </div>
             </div>
@@ -292,10 +294,12 @@
 
       <form id="adminLoginForm" class="space-y-4">
         <div>
+          <label for="adminPasswordInput" class="sr-only">Mật khẩu quản trị</label>
           <input
             id="adminPasswordInput"
             type="password"
             required
+            aria-label="Mật khẩu quản trị"
             placeholder="Nhập mật khẩu quản trị..."
             class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >

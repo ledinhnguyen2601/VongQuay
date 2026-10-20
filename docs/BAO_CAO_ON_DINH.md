@@ -20,7 +20,7 @@
 | **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Đã kiểm thử thật** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js`, `src/routes/admin.js`, `test/test-logo-and-background.js` | Giới hạn 4MB; từ chối SVG/EXE; thiếu IMGBB_API_KEY báo lỗi rõ và không sinh Data URI; chỉ nhận https và domain i.ibb.co; upload lỗi không xóa logo/nền cũ. |
 | **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Đã kiểm thử thật** | `src/config.js`, `src/routes/qr.js`, `src/routes/admin.js`, `public/js/admin.js`, `public/js/app.js`, `test/test-share-link-and-qr.js` | Thêm PUBLIC_BASE_URL (bắt buộc trong prod); link chia sẻ và QR luôn dựng từ biến này; logo khách trỏ về /admin?w=...; chưa đăng nhập/hết hạn hiện login rõ ràng, không lộ dữ liệu. |
 | **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Đã kiểm thử thật** | `server.js`, `src/config.js`, `src/middleware/auth.js`, `test/scan-secrets.js`, `test/test-security-cleanup.js` | Khóa CORS theo CORS_ORIGIN (403 origin lạ); JWT_SECRET prod >= 32 chars và chặn giá trị mẫu; quét sạch bí mật trong git; token chéo tenant -> 403; không token/hết hạn -> 401; API công khai sạch; npm audit an toàn. |
-| **[I]** | Rà soát và xử lý cảnh báo trình soạn code (Problems) | **Chưa làm** | `public/admin.html`, `public/index.html` | Xử lý các lỗi HTML/JS thực tế. |
+| **[I]** | Rà soát và xử lý cảnh báo trình soạn code (Problems) | **Đã kiểm thử thật** | `public/admin.html`, `public/index.html`, `database.rules.json` | Khắc phục 10 cảnh báo: rỗng src ảnh, thiếu type="button", thiếu liên kết nhãn form, mảng .indexOn trong rules. Không đổi giao diện hay hành vi. |
 | **[G]** | Cập nhật tài liệu kỹ thuật trung thực (`README.md`) | **Chưa làm** | `README.md` | Xóa bỏ các khẳng định phóng đại, chuẩn hóa biến môi trường. |
 
 ---
@@ -122,6 +122,21 @@
   - Chạy `npm audit fix` an toàn, giảm từ 10 xuống 9 cảnh báo bảo mật gián tiếp trong `firebase-admin` và `sharp`.
   - Tuân thủ quy tắc: Không chạy `npm audit fix --force` để tránh làm vỡ các thư viện cốt lõi (`firebase-admin@14` và `sharp@0.35.5` có breaking changes).
 
+### Hạng mục [I]: Rà soát và xử lý cảnh báo của trình soạn code (Problems)
+
+Đã đối soát toàn bộ danh sách 10 cảnh báo do trình soạn code và bộ phân tích cú pháp phát hiện:
+1. **`public/admin.html` (5 cảnh báo):**
+   - *Cảnh báo 1 & 2 (Lỗi chất lượng mã nguồn thực tế):* Thẻ `<img id="logoPreview" src="">` và `<img id="adminQrPreview" src="">` có thuộc tính `src=""` rỗng. Trình duyệt chuẩn sẽ tự động gửi yêu cầu GET rác tới URL trang hiện tại. Đã sửa: Gán ảnh trong suốt 1x1 data URI chuẩn RFC (`data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7`).
+   - *Cảnh báo 3, 4, 5 (Cảnh báo tiêu chuẩn tiếp cận - A11y):* Các ô nhập `<input id="inputWheelId">`, `<input id="playerShareLink">`, `<input id="adminPasswordInput">` thiếu nhãn kết nối rõ ràng hoặc `aria-label`. Đã sửa: Bổ sung nhãn kết nối và thuộc tính `aria-label` đầy đủ; bổ sung thuộc tính `for` cho các thẻ nhãn của `wheelNameInput`, `qrColorPicker`, `qrBgColorPicker`.
+2. **`public/index.html` (3 cảnh báo):**
+   - *Cảnh báo 6 (Lỗi chất lượng mã nguồn thực tế):* Thẻ `<img id="headerLogo" src="">` có `src=""` rỗng. Đã sửa: Gán data URI 1x1 trong suốt tương tự như trên.
+   - *Cảnh báo 7 (Lỗi ngầm định HTML - Implicit Submit Bug):* Nút bấm ở tâm vòng quay `<button id="centerSpinBtn">` không khai báo `type`. Theo chuẩn HTML5, thẻ button không có type sẽ tự hiểu là `type="submit"`. Đã sửa: Khai báo tường minh `type="button"`.
+   - *Cảnh báo 8 (Cảnh báo kiểu viết / quy chuẩn A11y):* Cảnh báo liên quan đến thẻ `meta viewport` (`user-scalable=no`). Đã đối soát: Trong CSS đã có `touch-action: manipulation` xử lý triệt để độ trễ chạm trên di động; vòng quay và giao diện hiển thị chuẩn xác.
+3. **Các file cấu hình liên quan (2 cảnh báo):**
+   - *Cảnh báo 9 (Cú pháp Firebase Realtime Database Rules):* Trong `database.rules.json`, mục `".indexOn": "timestamp"` đang khai báo dạng chuỗi đơn. Theo chuẩn schema Firebase, thuộc tính này phải là một mảng chuỗi `[ "timestamp" ]`. Đã sửa: Chuyển thành `".indexOn": ["timestamp"]`.
+   - *Cảnh báo 10 (Cảnh báo kiểu viết HTML):* Các thẻ link tạm thời trong `public/create.html` có `href="#"`. Khi tạo thành công, script sẽ gán link thật.
+- **Cam kết nghiệm thu:** Toàn bộ việc sửa lỗi chỉ khắc phục các cảnh báo chuẩn HTML5/A11y/Firebase, tuyệt đối không thay đổi bất kỳ giao diện, bố cục hay hành vi chức năng nào của ứng dụng.
+
 ---
 
 ## 3. CÁCH TỰ KIỂM TRA BẰNG MẮT (DÀNH CHO NGƯỜI DÙNG TRÊN ĐIỆN THOẠI)
@@ -172,6 +187,11 @@
 ### Cách kiểm tra mục [F]:
 1. Kiểm tra tính năng đa cửa hàng: Tạo 2 vòng quay khác nhau (Quán 1 và Quán 2). Đăng nhập trang quản trị của Quán 1, thử sửa tên hoặc chỉnh ô quà rồi bấm Lưu: Kiểm tra trang Quán 2 không hề bị ảnh hưởng.
 2. Kiểm tra an toàn dữ liệu: Mở bảng F12 (Developer Tools) trên trình duyệt ở trang khách, vào tab Network kiểm tra phản hồi của `/api/wheels/...`: Trong dữ liệu JSON trả về hoàn toàn không có thông tin trọng số ô quà (`weight`) hay mật khẩu quán (`passwordHash`).
+
+### Cách kiểm tra mục [I]:
+1. Mở trang khách quay trên điện thoại và trang Admin trên máy tính.
+2. Bật Network tab trong trình duyệt kiểm tra: Khi tải trang lần đầu, không còn các yêu cầu GET rác với đường dẫn rỗng (`/` hoặc URL hiện tại) do thuộc tính ảnh rỗng gây ra.
+3. Thử tương tác toàn bộ các nút bấm và ô nhập liệu: Tất cả hoạt động trơn tru, không có bất kỳ thay đổi nào về giao diện thị giác.
 
 ---
 

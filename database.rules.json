@@ -4,7 +4,7 @@
     ".write": false,
     "history": {
       "$wheelId": {
-        ".indexOn": "timestamp"
+        ".indexOn": ["timestamp"]
       }
     }
   }
