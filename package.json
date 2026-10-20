@@ -14,7 +14,8 @@
     "test:dlp": "node test/test-data-loss-prevention.js",
     "test:distribution": "node test/test-distribution-real.js",
     "test:logo": "node test/test-logo-and-background.js",
-    "test:share": "node test/test-share-link-and-qr.js"
+    "test:share": "node test/test-share-link-and-qr.js",
+    "test:sec-cleanup": "node test/test-security-cleanup.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

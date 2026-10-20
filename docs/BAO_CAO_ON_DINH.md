@@ -19,7 +19,7 @@
 | **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Đã kiểm thử thật** | `test/test-distribution-real.js`, `src/services/spin.js`, `package.json` | 5,000 lượt CSPRNG hội tụ hoàn hảo (max deviation 1.46% <= 2.5%); thứ tự ô API bốc thăm và trả khách khớp 100%; History lưu 100% đúng giải server bốc. |
 | **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Đã kiểm thử thật** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js`, `src/routes/admin.js`, `test/test-logo-and-background.js` | Giới hạn 4MB; từ chối SVG/EXE; thiếu IMGBB_API_KEY báo lỗi rõ và không sinh Data URI; chỉ nhận https và domain i.ibb.co; upload lỗi không xóa logo/nền cũ. |
 | **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Đã kiểm thử thật** | `src/config.js`, `src/routes/qr.js`, `src/routes/admin.js`, `public/js/admin.js`, `public/js/app.js`, `test/test-share-link-and-qr.js` | Thêm PUBLIC_BASE_URL (bắt buộc trong prod); link chia sẻ và QR luôn dựng từ biến này; logo khách trỏ về /admin?w=...; chưa đăng nhập/hết hạn hiện login rõ ràng, không lộ dữ liệu. |
-| **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Chưa làm** | `server.js`, `src/config.js`, `src/middleware/auth.js` | Khóa CORS, kiểm tra audit và cô lập tenant. |
+| **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Đã kiểm thử thật** | `server.js`, `src/config.js`, `src/middleware/auth.js`, `test/scan-secrets.js`, `test/test-security-cleanup.js` | Khóa CORS theo CORS_ORIGIN (403 origin lạ); JWT_SECRET prod >= 32 chars và chặn giá trị mẫu; quét sạch bí mật trong git; token chéo tenant -> 403; không token/hết hạn -> 401; API công khai sạch; npm audit an toàn. |
 | **[I]** | Rà soát và xử lý cảnh báo trình soạn code (Problems) | **Chưa làm** | `public/admin.html`, `public/index.html` | Xử lý các lỗi HTML/JS thực tế. |
 | **[G]** | Cập nhật tài liệu kỹ thuật trung thực (`README.md`) | **Chưa làm** | `README.md` | Xóa bỏ các khẳng định phóng đại, chuẩn hóa biến môi trường. |
 
@@ -102,6 +102,26 @@
 - **Bảo vệ màn hình Admin:** Khi truy cập trang admin chưa đăng nhập hoặc token hết hạn, toàn bộ giao diện quản trị và dữ liệu cache cũ bị ẩn triệt để, form đăng nhập hiển thị rõ ràng, không bị trắng trang và không lộ bất kỳ dữ liệu nhạy cảm nào.
 - **Bật `trust proxy`:** Đã cấu hình `app.set('trust proxy', 1)` trong `server.js` để Express đọc đúng header `x-forwarded-for` khi chạy sau Vercel Reverse Proxy.
 
+### Kết quả kiểm định thực tế mục [F]: Dọn dẹp An ninh & Bảo mật
+- **Khóa chặt CORS:** Đã loại bỏ nhánh mở tự do `callback(null, true)` và bỏ wildcard `*.vercel.app`. Chỉ cho phép các domain được liệt kê trong biến `CORS_ORIGIN`. Khi request từ origin lạ gửi tới, máy chủ từ chối ngay với mã lỗi **403 Forbidden**.
+- **Quy chuẩn JWT_SECRET Production:** Trong môi trường Production, máy chủ từ chối khởi động nếu `JWT_SECRET` ngắn hơn 32 ký tự hoặc chứa các từ khóa yếu/mẫu (`secret`, `changeme`, `0123456789abcdef` hoặc chuỗi trong file `.env.example`).
+- **Quét rà soát bí mật toàn diện (`test/scan-secrets.js`):**
+  - Đã quét toàn bộ cây thư mục và lịch sử commit của Git.
+  - Kết quả: Không có file `.env`, file JSON khóa dịch vụ Firebase, Private Key hay API key ImgBB nào từng bị commit nhầm vào Git.
+- **Kiểm thử phân quyền Token & Đa người dùng:**
+  - Token của Quán A gọi sửa Quán B: Máy chủ trả về **403 Forbidden**.
+  - Không có token: Trả về **401 Unauthorized**.
+  - Token hết hạn: Trả về **401 Unauthorized**.
+  - Sửa đổi Quán A hoàn toàn độc lập, không làm thay đổi hay ảnh hưởng Quán B.
+- **Quét phản hồi API công khai:** `GET /api/wheels/:id` và `POST /api/wheels/:id/spin` được kiểm tra chặt chẽ: tuyệt đối không chứa `weight` (trọng số), `passwordHash` (mật khẩu) hay `clientIp`.
+- **Đánh giá bộ giới hạn tần suất (Rate Limiter):**
+  - Hiện tại rate limiter chạy trên bộ nhớ RAM của Node.js.
+  - *Hạn chế trên Serverless (Vercel):* Do tính chất serverless có thể sinh nhiều instance độc lập (ephemeral containers) xử lý song song, bộ đếm RAM chỉ giới hạn cục bộ trong từng container và sẽ bị reset khi container bị hủy (cold start).
+  - *Đề xuất giải pháp bền vững:* Khi có nhu cầu mở rộng quy mô lớn, nên chuyển sang sử dụng dịch vụ lưu trữ phân tán bên ngoài như **Upstash Redis** (`@upstash/ratelimit`), vừa kết nối siêu nhanh qua REST API vừa đồng bộ số lượt request trên toàn bộ các vùng serverless của Vercel.
+- **Kết quả `npm audit`:**
+  - Chạy `npm audit fix` an toàn, giảm từ 10 xuống 9 cảnh báo bảo mật gián tiếp trong `firebase-admin` và `sharp`.
+  - Tuân thủ quy tắc: Không chạy `npm audit fix --force` để tránh làm vỡ các thư viện cốt lõi (`firebase-admin@14` và `sharp@0.35.5` có breaking changes).
+
 ---
 
 ## 3. CÁCH TỰ KIỂM TRA BẰNG MẮT (DÀNH CHO NGƯỜI DÙNG TRÊN ĐIỆN THOẠI)
@@ -148,6 +168,10 @@
    - Chạm vào khối Logo/Tên quán ở góc trên cùng: Trình duyệt chuyển ngay sang trang Quản Trị `/admin?w=...`.
 3. Mở trang `/admin?w=...` trong cửa sổ ẩn danh (chưa đăng nhập):
    - Màn hình đăng nhập bật lên ngay ngắn ở giữa, dữ liệu cài đặt của quán bị ẩn hoàn toàn, không có hiện tượng chớp nháy lộ thông tin hay trang trắng.
+
+### Cách kiểm tra mục [F]:
+1. Kiểm tra tính năng đa cửa hàng: Tạo 2 vòng quay khác nhau (Quán 1 và Quán 2). Đăng nhập trang quản trị của Quán 1, thử sửa tên hoặc chỉnh ô quà rồi bấm Lưu: Kiểm tra trang Quán 2 không hề bị ảnh hưởng.
+2. Kiểm tra an toàn dữ liệu: Mở bảng F12 (Developer Tools) trên trình duyệt ở trang khách, vào tab Network kiểm tra phản hồi của `/api/wheels/...`: Trong dữ liệu JSON trả về hoàn toàn không có thông tin trọng số ô quà (`weight`) hay mật khẩu quán (`passwordHash`).
 
 ---
 

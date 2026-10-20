@@ -35,8 +35,23 @@ function validateConfig() {
     throw new Error('❌ [CẤU HÌNH PRODUCTION LỖI]: Thiếu biến môi trường bắt buộc PUBLIC_BASE_URL trong môi trường production. Vui lòng cấu hình PUBLIC_BASE_URL=https://vong-quay-kappa.vercel.app trên Vercel Project Settings.');
   }
 
-  if (!process.env.JWT_SECRET) {
-    console.warn('⚠️ [CẢNH BÁO]: JWT_SECRET chưa được cấu hình trong biến môi trường Vercel. Đang dùng khóa bảo mật dự phòng.');
+  if (config.nodeEnv === 'production') {
+    const secret = process.env.JWT_SECRET || '';
+    const lowerSecret = secret.toLowerCase();
+    const insecurePatterns = [
+      'changeme',
+      'secret',
+      '0123456789abcdef',
+      'super_secret_jwt_key_at_least_32_characters_long_lucky_wheel_saas_2026_secure',
+      'lucky_wheel_saas_production_secure_fallback_jwt_secret_key_2026_x99a'
+    ];
+    const isPatternMatched = insecurePatterns.some((pattern) => lowerSecret.includes(pattern));
+
+    if (!secret || secret.length < 32 || isPatternMatched) {
+      throw new Error('❌ [CẤU HÌNH PRODUCTION LỖI]: JWT_SECRET không an toàn! Trong production, JWT_SECRET phải có độ dài tối thiểu 32 ký tự ngẫu nhiên và không được sử dụng các giá trị mẫu (như secret, changeme, 0123456789abcdef, hoặc chuỗi trong .env.example).');
+    }
+  } else if (!process.env.JWT_SECRET) {
+    console.warn('⚠️ [CẢNH BÁO]: JWT_SECRET chưa được cấu hình trong biến môi trường. Đang dùng khóa bảo mật dự phòng.');
   }
 
   if (!config.imgbbApiKey) {

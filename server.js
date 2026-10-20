@@ -56,7 +56,7 @@ app.use(
   })
 );
 
-// 2. Cấu hình CORS: Giới hạn nghiêm ngặt theo domain cấu hình trong .env
+// 2. Cấu hình CORS: Chỉ cho phép các origin cấu hình trong CORS_ORIGIN
 const allowedOrigins = config.corsOrigin
   .split(',')
   .map((origin) => origin.trim())
@@ -65,17 +65,14 @@ const allowedOrigins = config.corsOrigin
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Cho phép requests không có origin (curl/mobile app), hoặc domain Vercel, hoặc danh sách cho phép
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        allowedOrigins.includes('*') ||
-        origin.endsWith('.vercel.app')
-      ) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Cho phép mọi nguồn truy cập an toàn cho SaaS
+      // Cho phép requests cùng nguồn hoặc không có origin (curl, mobile app native, server-to-server)
+      if (!origin) {
+        return callback(null, true);
       }
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(new Error('CORS: Nguồn truy cập bị từ chối do không nằm trong danh sách cho phép.'));
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
