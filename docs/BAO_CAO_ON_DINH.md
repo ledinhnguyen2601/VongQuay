@@ -21,7 +21,7 @@
 | **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Đã kiểm thử thật** | `src/config.js`, `src/routes/qr.js`, `src/routes/admin.js`, `public/js/admin.js`, `public/js/app.js`, `test/test-share-link-and-qr.js` | Thêm PUBLIC_BASE_URL (bắt buộc trong prod); link chia sẻ và QR luôn dựng từ biến này; logo khách trỏ về /admin?w=...; chưa đăng nhập/hết hạn hiện login rõ ràng, không lộ dữ liệu. |
 | **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Đã kiểm thử thật** | `server.js`, `src/config.js`, `src/middleware/auth.js`, `test/scan-secrets.js`, `test/test-security-cleanup.js` | Khóa CORS theo CORS_ORIGIN (403 origin lạ); JWT_SECRET prod >= 32 chars và chặn giá trị mẫu; quét sạch bí mật trong git; token chéo tenant -> 403; không token/hết hạn -> 401; API công khai sạch; npm audit an toàn. |
 | **[I]** | Rà soát và xử lý cảnh báo trình soạn code (Problems) | **Đã kiểm thử thật** | `public/admin.html`, `public/index.html`, `database.rules.json` | Khắc phục 10 cảnh báo: rỗng src ảnh, thiếu type="button", thiếu liên kết nhãn form, mảng .indexOn trong rules. Không đổi giao diện hay hành vi. |
-| **[G]** | Cập nhật tài liệu kỹ thuật trung thực (`README.md`) | **Chưa làm** | `README.md` | Xóa bỏ các khẳng định phóng đại, chuẩn hóa biến môi trường. |
+| **[G]** | Cập nhật tài liệu kỹ thuật trung thực (`README.md`, `.env.example`) | **Đã sửa** | `README.md`, `.env.example` | Chuẩn hóa toàn bộ tên biến môi trường (FIREBASE_SERVICE_ACCOUNT_BASE64, PUBLIC_BASE_URL), loại bỏ khẳng định phóng đại (100% bảo mật, CORS nghiêm ngặt), bổ sung hướng dẫn triển khai Vercel chuẩn xác. |
 
 ---
 
@@ -136,6 +136,17 @@
    - *Cảnh báo 9 (Cú pháp Firebase Realtime Database Rules):* Trong `database.rules.json`, mục `".indexOn": "timestamp"` đang khai báo dạng chuỗi đơn. Theo chuẩn schema Firebase, thuộc tính này phải là một mảng chuỗi `[ "timestamp" ]`. Đã sửa: Chuyển thành `".indexOn": ["timestamp"]`.
    - *Cảnh báo 10 (Cảnh báo kiểu viết HTML):* Các thẻ link tạm thời trong `public/create.html` có `href="#"`. Khi tạo thành công, script sẽ gán link thật.
 - **Cam kết nghiệm thu:** Toàn bộ việc sửa lỗi chỉ khắc phục các cảnh báo chuẩn HTML5/A11y/Firebase, tuyệt đối không thay đổi bất kỳ giao diện, bố cục hay hành vi chức năng nào của ứng dụng.
+
+### Hạng mục [G]: Cập nhật tài liệu kỹ thuật trung thực (`README.md`, `.env.example`)
+
+1. **Khắc phục các mâu thuẫn về biến môi trường:**
+   - Phiên bản cũ chỉ nhắc đến `FIREBASE_SERVICE_ACCOUNT_PATH` (đường dẫn file), gây khó hiểu khi triển khai serverless trên Vercel. Đã bổ sung hướng dẫn chi tiết về `FIREBASE_SERVICE_ACCOUNT_BASE64` và câu lệnh tạo Base64 chuẩn cho Linux/macOS/Windows.
+   - Bổ sung biến bắt buộc `PUBLIC_BASE_URL` (giá trị `https://vong-quay-kappa.vercel.app`), làm rõ lý do tại sao không được dùng đường dẫn xem trước (preview) tự động của Vercel cho khách hàng.
+2. **Loại bỏ các khẳng định phóng đại và thiếu trung thực:**
+   - Xóa bỏ các cụm từ gây hiểu lầm như "bảo mật tuyệt đối", "100% PASS", "CORS nghiêm ngặt" (trong khi trước đây mở wildcard).
+   - Đổi giá trị mẫu của `JWT_SECRET` trong `.env.example` và `README.md` sang chuỗi placeholder không thể nhầm lẫn với bí mật thật.
+3. **Cập nhật danh mục kiểm thử tự động toàn diện:**
+   - Ghi nhận đầy đủ 8 kịch bản kiểm thử thực tế đã triển khai trong dự án (`npm run test:...`).
 
 ---
 

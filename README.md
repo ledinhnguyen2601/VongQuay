@@ -1,46 +1,47 @@
-# 🎡 Lucky Wheel SaaS - Nền Tảng Vòng Quay May Mắn Đa Cửa Hàng Bảo Mật Cao
+# 🎡 Lucky Wheel SaaS - Nền Tảng Vòng Quay May Mắn Đa Cửa Hàng
 
-Dự án **Lucky Wheel SaaS** được thiết kế theo kiến trúc đa người dùng (Multi-tenant) bảo mật cao, cho phép hàng ngàn cửa hàng (quán trà sữa, cà phê, nhà hàng, sự kiện tri ân...) tự khởi tạo vòng quay riêng, tùy biến thương hiệu, thiết lập giải thưởng và chia sẻ link / mã QR cho khách hàng.
+Dự án **Lucky Wheel SaaS** được thiết kế theo kiến trúc đa cửa hàng (Multi-tenant), cho phép các cửa hàng (quán trà sữa, cà phê, nhà hàng, sự kiện tri ân...) tự khởi tạo vòng quay riêng, tùy biến thương hiệu, thiết lập giải thưởng và chia sẻ link / mã QR cho khách hàng.
 
 ---
 
 ## 🌟 Điểm Nổi Bật & Tính Năng Chính
 
-1. **Kiến Trúc Đa Cửa Hàng (Multi-tenant) Tuyệt Đối**:
+1. **Kiến Trúc Đa Cửa Hàng (Multi-tenant)**:
    - Mỗi cửa hàng sở hữu một `wheelId` ngẫu nhiên khó đoán (`nanoid` $\ge 10$ ký tự).
-   - Dữ liệu hoàn toàn cô lập, không dùng chung bộ nhớ và không thể can thiệp chéo giữa các cửa hàng.
-2. **Bảo Mật Trọng Số & Rút Thăm Server-side**:
-   - Tỷ lệ trúng thưởng và trọng số nằm **100% tại máy chủ**.
-   - Thuật toán Roulette Wheel Selection sử dụng **`crypto.randomInt` (CSPRNG)** chuẩn mật mã học.
-   - API công khai trả về cho khách **tuyệt đối không chứa trọng số hay mật khẩu**.
+   - Dữ liệu cô lập theo từng cửa hàng, kiểm tra phân quyền token JWT chặt chẽ để ngăn chặn can thiệp chéo giữa các tài khoản.
+2. **Bảo Mật Trọng Số & Rút Thăm Phía Máy Chủ (Server-side)**:
+   - Trọng số và tỷ lệ trúng thưởng được lưu trữ và tính toán tại máy chủ.
+   - Thuật toán Roulette Wheel Selection sử dụng bộ sinh số ngẫu nhiên mật mã học **`crypto.randomInt` (CSPRNG)**.
+   - API công khai trả về cho trình duyệt không chứa thuộc tính trọng số (`weight`), mật khẩu quản trị (`passwordHash`) hay IP khách (`clientIp`).
+   - Kết quả trúng thưởng được xác định có tính thẩm quyền từ máy chủ (`data.prize`).
 3. **Xác Thực Quản Trị Bằng JWT**:
-   - Mật khẩu admin băm bằng `bcryptjs` (salt rounds = 10), không lưu plaintext, không có mật khẩu mặc định (xóa bỏ hoàn toàn mã pin '8888').
-   - Token JWT ký bằng `JWT_SECRET` ($\ge 32$ ký tự ngẫu nhiên), hạn 2 giờ.
-   - Mọi API quản trị đều kiểm tra chữ ký số và đối chiếu `wheelId` trong Token với URL.
-4. **Phòng Thủ Chống Tấn Công (OWASP Top 10)**:
-   - Chống Brute-force: Rate limit đăng nhập Admin (5 lần / 15 phút), Rate limit quay thưởng (30 lần / phút / IP).
-   - Bảo vệ Header bằng `helmet` với Content Security Policy (CSP) chặt chẽ.
-   - Giới hạn CORS theo domain chỉ định trong `.env`.
-   - Chống XSS: Thoát ký tự HTML, dùng `textContent`, kiểm tra mã màu Hex bằng Regex.
-   - Xử lý lỗi tập trung: Tuyệt đối không để lộ Stack Trace hay thông tin nhạy cảm.
-5. **Upload Ảnh Logo/Nền Qua ImgBB Từ Server**:
-   - Trình duyệt đẩy ảnh lên server qua Multer (RAM).
-   - Thư viện `sharp` kiểm tra **Magic Bytes** thực tế (chỉ cho phép JPEG, PNG, WEBP; từ chối SVG/file giả mạo).
-   - Giữ nguyên chất lượng ảnh gốc, đẩy lên ImgBB bằng API Key bí mật của server.
-6. **Kho 52 Mẫu Nền Chất Lượng Cao**:
-   - Phân nhóm: Ngày lễ chính thức Việt Nam (Tết Nguyên Đán, Giỗ Tổ 10/3, 30/4, 1/5, 2/9...), ngày kỷ niệm (Valentine, 8/3, Trung thu, 20/10, 20/11, Noel...), chủ đề trà sữa/cà phê, gradient và tối giản.
-   - Sinh bằng CSS Gradient và SVG tinh gọn, không lo bản quyền, tải siêu nhanh.
-   - Hỗ trợ thanh trượt điều chỉnh lớp phủ làm mờ nền (Overlay) trong dải 20% - 30%, chữ luôn dễ đọc.
+   - Mật khẩu quản trị được băm an toàn bằng `bcryptjs` (salt rounds = 10), không lưu mật khẩu dạng văn bản thuần và không sử dụng mật khẩu mặc định.
+   - Token JWT ký bằng `JWT_SECRET` (yêu cầu tối thiểu 32 ký tự ngẫu nhiên trong môi trường production).
+   - Mọi thao tác quản trị đều xác thực chữ ký số và đối chiếu `wheelId` trong Token với tham số yêu cầu.
+4. **Phòng Thủ Ứng Dụng Web**:
+   - Giới hạn tần suất (Rate limiting): Hạn chế tấn công brute-force mật khẩu quản trị và điều tiết số lượt quay thưởng.
+   - Header bảo vệ bằng `helmet` với Content Security Policy (CSP).
+   - Cấu hình CORS chặt chẽ theo danh sách domain trong biến môi trường `CORS_ORIGIN`.
+   - Chống XSS: Thoát ký tự HTML khi hiển thị và kiểm tra mã màu Hex bằng biểu thức chính quy.
+   - Xử lý lỗi tập trung: Không để lộ Stack Trace hay thông tin cấu trúc máy chủ ra phía người dùng.
+5. **Upload Ảnh Logo & Hình Nền Qua ImgBB**:
+   - File tải lên được xử lý tạm thời trong bộ nhớ RAM qua `multer` với giới hạn dung lượng 4MB.
+   - Thư viện `sharp` kiểm tra Magic Bytes thực tế của tệp (chỉ chấp nhận JPEG, PNG, WEBP; từ chối file SVG, EXE hoặc script giả mạo).
+   - Tải lên ImgBB bằng API Key bí mật của server, URL ảnh lưu trữ bắt buộc thuộc tên miền an toàn (`i.ibb.co` hoặc `ibb.co`).
+6. **Kho 52 Mẫu Nền Tối Ưu**:
+   - Phân nhóm: Ngày lễ Việt Nam, ngày kỷ niệm, chủ đề quán trà sữa/cà phê, gradient và tối giản.
+   - Sinh bằng CSS Gradient và SVG tinh gọn, tải nhanh và tiết kiệm băng thông.
+   - Hỗ trợ thanh trượt điều chỉnh lớp phủ làm mờ nền (Overlay) trong dải 20% - 30% để chữ luôn dễ đọc.
 7. **Tương Phản Màu Chữ WCAG AA & Theme Sáng/Tối**:
    - Thuật toán Relative Luminance tự động chọn chữ màu trắng `#FFFFFF` hoặc màu đen `#111827` tùy theo độ sáng của màu từng ô quạt, đạt tỷ lệ tương phản $\ge 4.5:1$.
-   - Theme sáng/tối tự động theo thiết bị hoặc nút chuyển tay, lưu trạng thái vào `localStorage`.
+   - Theme sáng/tối tự động theo thiết bị hoặc nút chuyển tay.
    - Nút bấm và vùng chạm chuẩn thiết bị di động ($\ge 44\text{px}$).
-8. **Mã QR Code Tùy Biến Đỉnh Cao**:
-   - Trỏ trực tiếp tới link quay của khách `/?w={wheelId}`.
-   - Mức sửa lỗi cao nhất (**High - Level H** $\approx 30\%$ phục hồi dữ liệu), cho phép chèn logo cửa hàng vào giữa mà camera điện thoại vẫn quét nhạy bén.
-   - Tùy chỉnh màu sắc mã QR, xuất ảnh PNG chất lượng cao tải về máy và hỗ trợ Web Share API.
+8. **Mã QR Code Tùy Biến**:
+   - Đường dẫn trong mã QR được sinh chuẩn xác từ biến môi trường `PUBLIC_BASE_URL`.
+   - Mức sửa lỗi High (Level H) hỗ trợ chèn logo cửa hàng vào giữa mà thiết bị quét vẫn nhận diện tốt.
+   - Tùy chỉnh màu sắc mã QR và hỗ trợ tải ảnh PNG về máy.
 9. **Lưu Lịch Sử Quay Phía Server**:
-   - Ghi nhận thời gian, giải thưởng trúng và IP để phục vụ đối soát, tránh tranh chấp khi trao quà.
+   - Ghi nhận thời gian, giải thưởng trúng, chỉ số ô và địa chỉ IP thực của khách để phục vụ đối soát, hạn chế tranh chấp khi trao quà.
 
 ---
 
@@ -48,50 +49,59 @@ Dự án **Lucky Wheel SaaS** được thiết kế theo kiến trúc đa ngư�
 
 ```
 d:/VongQuay/
-├── .env                         # File cấu hình bí mật thực tế
-├── .env.example                 # Mẫu khai báo biến môi trường
-├── .gitignore                   # Chặn commit .env, node_modules, secrets
+├── .env.example                 # Mẫu khai báo biến môi trường chuẩn
+├── .gitattributes               # Quy tắc chuẩn hóa xuống dòng (* text=auto eol=lf)
+├── .gitignore                   # Chặn commit .env, node_modules, file khóa bí mật
 ├── database.rules.json          # Quy tắc bảo mật Firebase RTDB (.read: false, .write: false)
-├── package.json                 # Khai báo dependencies và scripts
-├── server.js                    # Khởi động ứng dụng Express, Helmet, CORS, Route
+├── package.json                 # Khai báo dependencies và kịch bản test
+├── server.js                    # Khởi động ứng dụng Express, Middleware, Routes
+├── api/
+│   └── index.js                 # Entrypoint phục vụ Vercel Serverless Function
 ├── src/
-│   ├── config.js                # Kiểm tra biến môi trường nghiêm ngặt khi start
-│   ├── db.js                    # Firebase Admin SDK + Fallback In-Memory Database
+│   ├── config.js                # Kiểm tra nghiêm ngặt biến môi trường
+│   ├── db.js                    # Firebase Admin SDK + Fallback In-Memory (chỉ khi dev)
 │   ├── middleware/
 │   │   ├── auth.js              # Xác thực JWT & Kiểm tra Multi-tenant wheelId
 │   │   └── rateLimiter.js       # Giới hạn tần suất đăng nhập, quay, tạo wheel, upload
 │   ├── routes/
-│   │   ├── public.js            # API tạo wheel, lấy thông tin công khai (ẩn trọng số), quay thưởng
-│   │   ├── admin.js             # API đăng nhập admin, cập nhật cấu hình, xem lịch sử
-│   │   ├── upload.js            # API upload ảnh qua RAM + Sharp Magic Bytes + ImgBB
-│   │   └── qr.js                # API sinh mã QR PNG/DataURL kèm logo giữa
+│   │   ├── public.js            # API công khai: xem thông tin, quay thưởng (ẩn trọng số)
+│   │   ├── admin.js             # API quản trị: đăng nhập, cấu hình, xem lịch sử
+│   │   ├── upload.js            # API upload ảnh logo/nền qua RAM + Sharp + ImgBB
+│   │   └── qr.js                # API sinh mã QR PNG kèm logo giữa
 │   ├── services/
 │   │   ├── spin.js              # Rút thăm ngẫu nhiên bằng crypto.randomInt (CSPRNG)
 │   │   ├── imgbb.js             # Kiểm tra magic bytes và gọi ImgBB API
 │   │   └── validate.js          # Kiểm tra tính hợp lệ dữ liệu, chống XSS
 │   └── data/
-│       └── backgrounds.json     # Kho 52 mẫu nền ngày lễ VN, trà sữa, gradient
+│       └── backgrounds.json     # Kho mẫu nền ngày lễ VN, trà sữa, gradient
 ├── public/
-│   ├── index.html               # Trang quay thưởng cho khách (Canvas, Audio, Confetti)
-│   ├── create.html              # Trang tạo vòng quay & Bảng điều khiển Quản trị (Admin Panel)
+│   ├── index.html               # Giao diện quay thưởng cho khách
+│   ├── create.html              # Giao diện tạo vòng quay mới
+│   ├── admin.html               # Giao diện bảng quản trị của chủ quán
 │   ├── css/
-│   │   └── style.css            # Hệ thống CSS theme sáng/tối, WCAG AA
+│   │   └── style.css            # Hệ thống CSS theme sáng/tối, chuẩn WCAG AA
 │   └── js/
-│       ├── wheel.js             # Canvas Wheel Engine Retina, âm thanh Web Audio, Confetti
-│       ├── app.js               # Logic trang khách, kết nối API spin, modal trúng thưởng
-│       └── admin.js             # Logic bảng admin, quản lý ô quà, chuẩn hóa 100%, QR
+│       ├── wheel.js             # Canvas Wheel Engine, âm thanh Web Audio, Confetti
+│       ├── app.js               # Logic trang khách, kết nối API spin, chống bấm đúp
+│       └── admin.js             # Logic bảng admin, quản lý ô quà, xuất QR
 └── test/
-    ├── test-spin.js             # Kiểm thử xác suất 10.000 lượt quay
-    ├── test-security.js         # Kiểm thử bảo mật 12 hạng mục (Multi-tenant, JWT, Magic bytes)
-    └── test-e2e-integration.js  # Kiểm thử tích hợp luồng đầu cuối E2E
+    ├── playwright-mobile-e2e.test.js  # Kiểm thử Playwright giả lập mobile 30 lượt quay
+    ├── wheel-math-regression.test.js  # Kiểm thử hồi quy toán học góc dừng 5.382 ca
+    ├── test-data-foundation.js        # Kiểm tra cấu hình Firebase prod & /api/health
+    ├── test-data-loss-prevention.js   # Kiểm tra chống mất dữ liệu và cập nhật từng phần
+    ├── test-distribution-real.js      # Kiểm định phân phối xác suất 5.000 lượt quay
+    ├── test-logo-and-background.js    # Kiểm tra upload ảnh 4MB và domain ImgBB
+    ├── test-share-link-and-qr.js      # Kiểm tra link chia sẻ và mã QR theo PUBLIC_BASE_URL
+    ├── test-security-cleanup.js       # Kiểm tra CORS, JWT_SECRET, phân quyền token
+    └── scan-secrets.js                # Quét mã nguồn và lịch sử git tìm bí mật
 ```
 
 ---
 
-## ⚙️ Hướng Dẫn Cài Đặt & Chạy Dự Án
+## ⚙️ Hướng Dẫn Cài Đặt & Chạy Cục Bộ (Local Development)
 
 ### 1. Yêu cầu hệ thống
-- Node.js version 18.x hoặc mới hơn (đã thử nghiệm xuất sắc trên Node v24).
+- Node.js phiên bản 18.x trở lên.
 - Trình duyệt hiện đại (Chrome, Safari, Firefox, Edge).
 
 ### 2. Cài đặt thư viện
@@ -99,140 +109,125 @@ d:/VongQuay/
 npm install
 ```
 
-### 3. Cấu hình file `.env`
-Sao chép từ `.env.example`:
+### 3. Cấu hình biến môi trường
+Tạo file `.env` từ file mẫu:
 ```bash
 cp .env.example .env
 ```
-Mở file `.env` và thiết lập các giá trị:
+Thiết lập các giá trị trong `.env`:
 ```env
 PORT=3000
 NODE_ENV=development
 
-# Khóa bí mật JWT (bắt buộc tối thiểu 32 ký tự ngẫu nhiên)
-JWT_SECRET=super_secret_jwt_key_at_least_32_characters_long_lucky_wheel_saas_2026_secure
+# Khóa bí mật ký JWT (trong production bắt buộc >= 32 ký tự ngẫu nhiên)
+JWT_SECRET=your_random_jwt_secret_at_least_32_characters
 
-# Danh sách domain được phép CORS
+# Domain được phép truy cập CORS (phân tách bằng dấu phẩy)
 CORS_ORIGIN=http://localhost:3000
+
+# Địa chỉ công khai gốc của website
+PUBLIC_BASE_URL=https://vong-quay-kappa.vercel.app
 
 # API Key ImgBB (lấy miễn phí tại https://api.imgbb.com)
 IMGBB_API_KEY=your_imgbb_api_key_here
 
-# Firebase Realtime Database (Tùy chọn - nếu để trống sẽ tự động dùng In-Memory Store)
-FIREBASE_SERVICE_ACCOUNT_PATH=
-FIREBASE_DATABASE_URL=
+# Firebase Realtime Database:
+# Khi chạy cục bộ, có thể trỏ file JSON service account:
+FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
+FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
 ```
 
-### 4. Khởi chạy máy chủ
+### 4. Khởi chạy máy chủ cục bộ
 ```bash
-# Khởi động ứng dụng
 npm start
 ```
 Truy cập:
-- **Trang quay của khách**: [http://localhost:3000](http://localhost:3000)
-- **Trang tạo & quản trị vòng quay**: [http://localhost:3000/create](http://localhost:3000/create)
+- **Trang quay thưởng của khách**: [http://localhost:3000](http://localhost:3000)
+- **Trang tạo vòng quay mới**: [http://localhost:3000/create](http://localhost:3000/create)
 
 ---
 
-## 🔑 Hướng Dẫn Lấy API Key ImgBB
+## ☁️ Hướng Dẫn Triển Khai Trên Vercel (Production Deployment)
 
-1. Truy cập [https://api.imgbb.com/](https://api.imgbb.com/).
-2. Đăng ký / Đăng nhập tài khoản miễn phí.
-3. Nhấp vào nút **"Get API Key"** (Lấy khóa API).
-4. Sao chép chuỗi API Key và dán vào biến `IMGBB_API_KEY` trong file `.env`.
-> *Ghi chú*: Nếu chưa có key, hệ thống tự động chuyển sang chế độ mô phỏng Data URI an toàn để bạn thử nghiệm ngay lập tức.
+Ứng dụng được thiết kế chạy tối ưu trên nền tảng **Vercel Serverless Functions**.
 
----
+### 1. Danh sách biến môi trường cần cấu hình trên Vercel
+Vào **Project Settings** > **Environment Variables** trên Vercel và khai báo đầy đủ các biến sau:
 
-## 🔥 Hướng Dẫn Cấu Hình Firebase Realtime Database
+| Tên biến môi trường | Giá trị thực tế / Mô tả | Bắt buộc |
+| :--- | :--- | :---: |
+| `NODE_ENV` | `production` | Có |
+| `PUBLIC_BASE_URL` | `https://vong-quay-kappa.vercel.app` (Địa chỉ domain chính thức) | Có |
+| `JWT_SECRET` | Chuỗi ngẫu nhiên bí mật có độ dài $\ge 32$ ký tự | Có |
+| `CORS_ORIGIN` | `https://vong-quay-kappa.vercel.app` (hoặc các domain được phép) | Có |
+| `IMGBB_API_KEY` | Khóa API lấy từ ImgBB để upload logo/nền | Có |
+| `FIREBASE_DATABASE_URL` | Đường dẫn Realtime Database (ví dụ: `https://...firebaseio.com`) | Có |
+| `FIREBASE_SERVICE_ACCOUNT_BASE64` | Nội dung file `serviceAccountKey.json` được mã hóa Base64 | Có |
 
-1. Truy cập [Firebase Console](https://console.firebase.google.com/) và tạo một dự án mới (ví dụ `lucky-wheel-saas`).
-2. Vào mục **Build** > **Realtime Database** > bấm **Create Database**.
-3. Chọn khu vực máy chủ (ví dụ `Singapore - asia-southeast1`).
-4. Chuyển sang tab **Rules**, dán toàn bộ nội dung trong file `database.rules.json` vào:
-   ```json
-   {
-     "rules": {
-       ".read": false,
-       ".write": false
-     }
-   }
-   ```
-   *Ý nghĩa: Chặn toàn bộ truy cập trực tiếp từ client. Chỉ có Server của bạn thông qua Firebase Admin SDK mới có quyền đọc/ghi dữ liệu.*
-5. Vào **Project settings** (biểu tượng bánh răng) > chọn tab **Service accounts**.
-6. Bấm nút **Generate new private key** để tải về file `serviceAccountKey.json`.
-7. Đặt file này vào thư mục dự án (file này đã được chặn trong `.gitignore`).
-8. Cập nhật `.env`:
-   ```env
-   FIREBASE_SERVICE_ACCOUNT_PATH=./serviceAccountKey.json
-   FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
-   ```
+> **Lưu ý quan trọng về cách tạo chuỗi Base64 cho Firebase:**
+> Để đưa file `serviceAccountKey.json` lên biến môi trường Vercel mà không bị lỗi xuống dòng hay ký tự đặc biệt, hãy chạy lệnh sau trên máy tính của bạn:
+> - **Linux / macOS:** `base64 -w 0 serviceAccountKey.json` (hoặc `base64 -i serviceAccountKey.json`)
+> - **Windows PowerShell:** `[Convert]::ToBase64String([IO.File]::ReadAllBytes("serviceAccountKey.json"))`
+> Sao chép toàn bộ chuỗi kết quả và dán vào biến `FIREBASE_SERVICE_ACCOUNT_BASE64` trên Vercel.
+
+### 2. Quy định về đường dẫn chia sẻ cho khách
+- **Tên miền chính thức:** Khách hàng sử dụng đường dẫn xuất phát từ tên miền chính: `https://vong-quay-kappa.vercel.app/?w={wheelId}`.
+- **Tên miền bản xem trước (Preview Deployments):** Các link xem trước tự động của Vercel (dạng `*-nguyens-projects-*.vercel.app`) được Vercel tự động kích hoạt tính năng Vercel Authentication để bảo vệ nội bộ. **Không sử dụng link preview này để gửi cho khách hàng.**
 
 ---
 
-## 🧪 Chạy Kiểm Thử Tự Động (Test Suite)
+## 🔥 Quy Tắc An Toàn Firebase Realtime Database
 
-Dự án cung cấp 3 bộ kiểm thử tự động toàn diện:
-
-### 1. Kiểm thử xác suất 10.000 lượt quay (`test-spin.js`):
-Kiểm định tính ngẫu nhiên của `crypto.randomInt` và đối chiếu độ lệch so với trọng số lý thuyết:
-```bash
-npm run test:spin
+Trên Firebase Console, vào mục **Realtime Database** > chọn tab **Rules** và thiết lập:
+```json
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "history": {
+      "$wheelId": {
+        ".indexOn": ["timestamp"]
+      }
+    }
+  }
+}
 ```
-*Kết quả thực tế: Chạy 10.000 lượt quay chỉ trong 4ms, độ lệch cực đại chỉ ~1.0%, hội tụ hoàn hảo theo phân phối xác suất.*
-
-### 2. Kiểm thử bảo mật & Cách ly đa người dùng (`test-security.js`):
-Kiểm tra 12 hạng mục bảo mật: băm bcrypt, cách ly wheelId, chặn token giả mạo, kiểm tra magic bytes file ảnh, từ chối SVG:
-```bash
-npm run test:security
-```
-*Kết quả: 12/12 bài kiểm tra PASS 100%.*
-
-### 3. Kiểm thử tích hợp E2E toàn bộ luồng (`test-e2e-integration.js`):
-Kiểm tra từ khâu tạo vòng quay, đổi cấu hình, khách quay, kiểm tra không lộ trọng số, kiểm tra ghi nhận lịch sử, sinh QR code:
-```bash
-node test/test-e2e-integration.js
-```
-*Kết quả: 26/26 bước kiểm thử PASS 100%.*
+*Ý nghĩa:* Chặn mọi truy cập đọc/ghi trực tiếp từ trình duyệt của người dùng. Chỉ có máy chủ thông qua Firebase Admin SDK mới có quyền tương tác với cơ sở dữ liệu.
 
 ---
 
-## 🛡️ Báo Cáo Chi Tiết Các Điểm Bảo Mật Đã Triển Khai
+## 🧪 Hệ Thống Kiểm Thử Tự Động (Test Suites)
 
-| STT | Yêu cầu bảo mật | Giải pháp triển khai trong mã nguồn |
-|:---:|:---|:---|
-| **1** | **Bảo mật trọng số** | Trọng số (`weight`) chỉ lưu trữ tại Server. Router công khai (`src/routes/public.js`) lọc bỏ hoàn toàn thuộc tính này trước khi gửi về client. Client chỉ nhận `{id, text, color}`. |
-| **2** | **Kết quả do Server quyết định** | Sử dụng hàm `spinWheel` với thuật toán Roulette Wheel Selection và bộ sinh số ngẫu nhiên mật mã học `crypto.randomInt`. Client chỉ nhận `targetIndex` để thực hiện hiệu ứng quay Canvas. |
-| **3** | **Xác thực JWT nghiêm ngặt** | Token được ký bằng thuật toán HS256 với khóa `JWT_SECRET` ($\ge 32$ ký tự ngẫu nhiên), thời hạn 2 giờ. Middleware `authenticateAdmin` xác minh chữ ký số và **đối chiếu `wheelId` trong payload với URL**, loại bỏ hoàn toàn nguy cơ leo thang đặc quyền. |
-| **4** | **Không lưu mật khẩu plaintext / Không có mật khẩu mặc định** | Băm mật khẩu quản trị bằng `bcryptjs` với salt rounds = 10. Xóa bỏ hoàn toàn mã PIN mặc định '8888' trong mã nguồn. |
-| **5** | **Chống Brute-force & DoS** | Tích hợp `express-rate-limit`: Giới hạn đăng nhập Admin 5 lần/15 phút/IP + wheelId; giới hạn quay 30 lần/phút/IP; giới hạn upload và tạo vòng quay mới. |
-| **6** | **HTTP Security Headers & CORS** | Cấu hình `helmet` với Content Security Policy (CSP) chặt chẽ; giới hạn CORS nghiêm ngặt theo domain cấu hình trong `.env`; giới hạn kích thước request body 1MB. |
-| **7** | **Chống XSS & Dữ liệu độc hại** | Dữ liệu người dùng hiển thị qua `textContent` hoặc hàm `escapeHtml`; kiểm tra mã màu Hex bằng Regex `HEX_COLOR_REGEX`; URL ảnh xác thực theo whitelist domain imgbb. |
-| **8** | **Kiểm tra File Upload Magic Bytes** | File lưu tạm trong RAM qua `multer.memoryStorage()`; dùng `sharp.metadata()` đọc Magic Bytes thực tế của file; từ chối file SVG, EXE hoặc script giả mạo ảnh; giới hạn dung lượng tối đa 5MB. |
-| **9** | **Bảo vệ Secrets** | `.gitignore` chặn tuyệt đối file `.env`, `serviceAccountKey.json`, `*.pem`, `*.key`. File `src/config.js` kiểm tra biến môi trường và dừng server ngay nếu thiếu hoặc JWT_SECRET không đủ an toàn. |
-| **10** | **Firebase Rules chặn truy cập trực tiếp** | File `database.rules.json` thiết lập `".read": false, ".write": false` cho client, chỉ cho phép server đọc/ghi qua Firebase Admin SDK. |
-| **11** | **Lịch sử quay đối soát** | Server tự động ghi nhận lịch sử mỗi lượt quay (`timestamp`, `prizeText`, `prizeColor`, `clientIp`) vào database để admin đối soát khi có tranh chấp. |
-| **12** | **Che giấu lỗi hệ thống** | Error handler toàn cục bắt mọi ngoại lệ và chỉ trả thông báo thân thiện cho client, không bao giờ để lộ Stack Trace hay thông tin cấu trúc máy chủ. |
+Dự án trang bị hệ thống kiểm thử tự động toàn diện kiểm định trên môi trường thực tế:
+
+```bash
+# 1. Kiểm thử E2E trình duyệt di động (30 lượt quay liên tiếp qua Playwright giả lập iPhone)
+npm run test:e2e:mobile
+
+# 2. Kiểm thử hồi quy toán học góc dừng vòng quay (5.382 ca kiểm thử)
+npm run test:math
+
+# 3. Kiểm thử kiểm tra kết nối Firebase trong production & API /api/health
+npm run test:data-foundation
+
+# 4. Kiểm thử chống mất dữ liệu (404 khi vòng quay không tồn tại, cập nhật từng phần)
+npm run test:dlp
+
+# 5. Kiểm thử phân phối xác suất trúng thưởng (mô phỏng 5.000 lượt quay thực tế)
+npm run test:distribution
+
+# 6. Kiểm thử tải ảnh logo/nền, giới hạn 4MB và kiểm tra tên miền ImgBB
+npm run test:logo
+
+# 7. Kiểm thử link chia sẻ, mã QR và bảo vệ màn hình quản trị
+npm run test:share
+
+# 8. Kiểm thử dọn dẹp bảo mật (CORS, JWT_SECRET, quét bí mật trong git, phân quyền token)
+npm run test:sec-cleanup
+```
 
 ---
 
-## 🚀 Hướng Dẫn Triển Khai (Deployment)
+## 📝 Giấy Phép & Đóng Góp
 
-### Triển khai trên VPS (Ubuntu / Debian với PM2 + Nginx):
-1. Cài đặt Node.js và PM2:
-   ```bash
-   sudo npm install -g pm2
-   ```
-2. Clone dự án và cài đặt:
-   ```bash
-   cd /var/www/lucky-wheel
-   npm install --production
-   ```
-3. Tạo file `.env` với `NODE_ENV=production` và `JWT_SECRET` mạnh.
-4. Chạy ứng dụng qua PM2:
-   ```bash
-   pm2 start server.js --name "lucky-wheel"
-   pm2 save
-   pm2 startup
-   ```
-5. Cấu hình Nginx Reverse Proxy với HTTPS (Certbot SSL).
+Dự án phục vụ mục đích quản lý và vận hành vòng quay may mắn đa cửa hàng, đảm bảo tính minh bạch và độ tin cậy trong các chương trình tri ân khách hàng.
