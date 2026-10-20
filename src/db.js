@@ -42,11 +42,21 @@ if ((config.firebase.serviceAccountBase64 || config.firebase.serviceAccountPath)
       isFirebaseConnected = true;
       console.log('✅ [DATABASE]: Đã kết nối thành công tới Firebase Realtime Database (Bảo mật qua RAM).');
     } else {
+      if (config.nodeEnv === 'production') {
+        throw new Error('❌ [DATABASE PRODUCTION LỖI]: Không tìm thấy thông tin xác thực Firebase hợp lệ. Từ chối chạy chế độ In-Memory trong production.');
+      }
       console.warn('⚠️ [DATABASE]: Không tìm thấy thông tin Firebase hợp lệ. Chuyển sang In-Memory Database.');
     }
   } catch (error) {
     console.error('❌ [DATABASE]: Khởi tạo Firebase thất bại:', error.message);
+    if (config.nodeEnv === 'production') {
+      throw new Error(`❌ [DATABASE PRODUCTION LỖI]: Khởi tạo Firebase thất bại: ${error.message}. Từ chối chạy chế độ In-Memory trong production.`);
+    }
     console.warn('⚠️ [DATABASE]: Tự động chuyển sang In-Memory Database.');
+  }
+} else {
+  if (config.nodeEnv === 'production') {
+    throw new Error('❌ [DATABASE PRODUCTION LỖI]: Thiếu cấu hình Firebase trong production.');
   }
 }
 

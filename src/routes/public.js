@@ -22,13 +22,14 @@ const router = express.Router();
 
 /**
  * GET /api/health - Kiểm tra trạng thái máy chủ & Kết nối Database
+ * Tuyệt đối không bao giờ làm lộ thông tin cấu hình hay bí mật nội bộ
  */
 router.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    database: db.isUsingFirebase() ? 'firebase-realtime-database' : 'fallback-persistent-store',
-    timestamp: new Date().toISOString(),
-    service: 'Lucky Wheel SaaS'
+    firebase: db.isUsingFirebase(),
+    env: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
   });
 });
 

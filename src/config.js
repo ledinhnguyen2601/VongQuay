@@ -6,8 +6,10 @@
 const dotenv = require('dotenv');
 const path = require('path');
 
-// Đọc cấu hình từ file .env (nếu có trên local)
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Đọc cấu hình từ file .env trong môi trường phát triển cục bộ
+if (process.env.NODE_ENV !== 'production' && !process.env.DISABLE_DOTENV) {
+  dotenv.config({ path: path.resolve(__dirname, '../.env') });
+}
 
 const config = {
   port: parseInt(process.env.PORT, 10) || 3000,
@@ -37,7 +39,11 @@ function validateConfig() {
   }
 
   if ((!config.firebase.serviceAccountBase64 && !config.firebase.serviceAccountPath) || !config.firebase.databaseURL) {
-    console.warn('ℹ️ [THÔNG TIN]: Firebase chưa được cấu hình trên Vercel. Hệ thống sẽ sử dụng In-Memory Database (RAM Store) để phục vụ ngay.');
+    if (config.nodeEnv === 'production') {
+      throw new Error('❌ [CẤU HÌNH PRODUCTION LỖI]: Thiếu thông tin kết nối Firebase Realtime Database (FIREBASE_SERVICE_ACCOUNT_BASE64 hoặc FIREBASE_SERVICE_ACCOUNT_PATH và FIREBASE_DATABASE_URL). Trong production bắt buộc phải có Firebase, tuyệt đối không lùi về In-Memory!');
+    } else {
+      console.warn('ℹ️ [THÔNG TIN]: Firebase chưa được cấu hình. Hệ thống sẽ sử dụng In-Memory Database (RAM Store) để phục vụ phát triển cục bộ.');
+    }
   }
 }
 
