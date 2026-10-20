@@ -12,8 +12,8 @@ class LuckyWheel {
 
     this.segments = options.segments || [];
     this.logoUrl = options.logoUrl || '';
-    this.onSpinEnd = options.onSpinEnd || (() => {});
-    this.onTick = options.onTick || (() => {});
+    this.onSpinEnd = options.onSpinEnd || (() => { });
+    this.onTick = options.onTick || (() => { });
 
     // Trạng thái quay
     this.isSpinning = false;
@@ -403,7 +403,7 @@ class LuckyWheel {
     const targetAngle = (3 * Math.PI) / 2 - targetCenterAngle;
 
     // Số vòng quay tối thiểu tăng theo thời gian để tốc độ quay tự nhiên
-    const minSpins = Math.floor(durationMs / 1000) * 1.6 + 4;
+    const minSpins = Math.floor(Math.floor(durationMs / 1000) * 1.6) + 4;
     const extraRotations = minSpins * Math.PI * 2;
 
     const startRotation = this.currentRotation % (Math.PI * 2);
