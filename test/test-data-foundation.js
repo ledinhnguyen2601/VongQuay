@@ -32,8 +32,8 @@ async function testDataFoundation() {
     assert.strictEqual(data.serviceAccount, undefined, 'Tuyệt đối không lộ serviceAccount');
     console.log('✅ PASS: GET /api/health trả đúng định dạng bảo mật.');
 
-    // 2. Kiểm tra NODE_ENV=production từ chối chạy khi thiếu cấu hình
-    console.log('\n👉 [KIỂM TRA]: Chạy thử quy tắc khởi động trong môi trường production...');
+    // 2. Kiểm tra NODE_ENV=production không bị sập serverless khi thiếu cấu hình
+    console.log('\n👉 [KIỂM TRA]: Khởi động an toàn không ném uncaught exception trên Serverless Vercel...');
     const childProcess = require('child_process');
     const out = childProcess.spawnSync(process.execPath, [
       '-e',
@@ -42,21 +42,21 @@ async function testDataFoundation() {
       delete process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
       delete process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
       delete process.env.FIREBASE_DATABASE_URL;
+      delete process.env.PUBLIC_BASE_URL;
       try {
-        require('./src/config');
-        process.exit(0); // nếu không lỗi là sai
+        const config = require('./src/config');
+        const db = require('./src/db');
+        console.log('✅ Khởi động thành công ở chế độ dự phòng, không sập Serverless.');
+        process.exit(0);
       } catch (err) {
-        if (err.message.includes('CẤU HÌNH PRODUCTION LỖI')) {
-          console.log('✅ Bắt đúng lỗi cấu hình production:', err.message);
-          process.exit(42);
-        }
+        console.error('❌ Bị sập khởi động:', err.message);
         process.exit(1);
       }
       `
-    ], { cwd: process.cwd() });
+    ], { cwd: process.cwd(), encoding: 'utf8' });
 
-    assert.strictEqual(out.status, 42, 'Production thiếu Firebase phải ném lỗi từ chối chạy');
-    console.log('✅ PASS: Môi trường production từ chối chạy nếu thiếu cấu hình Firebase.');
+    assert.strictEqual(out.status, 0, 'Production thiếu Firebase hoặc PUBLIC_BASE_URL không được làm sập Serverless Function (tránh lỗi 500 FUNCTION_INVOCATION_FAILED)');
+    console.log('✅ PASS: Môi trường Serverless khởi động an toàn, chống crash 500.');
 
     console.log('\n=================================================================');
     console.log('🎉 TOÀN BỘ KIỂM THỬ NỀN TẢNG DỮ LIỆU [TASK D] ĐÃ PASS!');

@@ -94,12 +94,12 @@ async function runTests() {
     assert.strictEqual(wrongTokenRes.status, 401, 'Token sai/hết hạn phải trả 401');
     console.log('✅ PASS: API Admin từ chối 401 cho mọi yêu cầu chưa xác thực hoặc token hết hạn.');
 
-    // 4. Kiểm tra Production từ chối chạy khi thiếu PUBLIC_BASE_URL
-    console.log('\n--- 4. Kiểm tra Production bắt buộc có PUBLIC_BASE_URL ---');
-    const checkProdCmd = `node -e "process.env.NODE_ENV='production'; delete process.env.PUBLIC_BASE_URL; process.env.FIREBASE_DATABASE_URL='https://test.firebaseio.com'; process.env.FIREBASE_SERVICE_ACCOUNT_BASE64='e30='; process.env.DISABLE_DOTENV='true'; try { require('./src/config'); console.log('FAIL'); } catch (e) { if (e.message.includes('PUBLIC_BASE_URL')) { console.log('PASS_CAUGHT'); } else { console.log('UNEXPECTED_ERROR: ' + e.message); } }"`;
+    // 4. Kiểm tra fallback an toàn khi thiếu PUBLIC_BASE_URL
+    console.log('\n--- 4. Kiểm tra fallback an toàn khi thiếu PUBLIC_BASE_URL ---');
+    const checkProdCmd = `node -e "process.env.NODE_ENV='production'; delete process.env.PUBLIC_BASE_URL; process.env.FIREBASE_DATABASE_URL='https://test.firebaseio.com'; process.env.FIREBASE_SERVICE_ACCOUNT_BASE64='e30='; process.env.DISABLE_DOTENV='true'; const cfg = require('./src/config'); if (cfg.publicBaseUrl === 'https://vong-quay-kappa.vercel.app') { console.log('PASS_FALLBACK'); } else { console.log('FAIL: ' + cfg.publicBaseUrl); }"`;
     const prodResult = execSync(checkProdCmd, { cwd: process.cwd() }).toString().trim();
-    assert.strictEqual(prodResult, 'PASS_CAUGHT', 'Production thiếu PUBLIC_BASE_URL phải ném lỗi bắt buộc');
-    console.log('✅ PASS: Trong môi trường production, thiếu PUBLIC_BASE_URL máy chủ lập tức từ chối chạy với thông báo lỗi rõ ràng.');
+    assert.strictEqual(prodResult, 'PASS_FALLBACK', 'Khi thiếu PUBLIC_BASE_URL, hệ thống phải tự động dùng fallback https://vong-quay-kappa.vercel.app');
+    console.log('✅ PASS: Trong môi trường production, thiếu PUBLIC_BASE_URL hệ thống tự động fallback về https://vong-quay-kappa.vercel.app an toàn.');
 
   } finally {
     console.log('\n--- Dọn dẹp dữ liệu kiểm thử Task E ---');
