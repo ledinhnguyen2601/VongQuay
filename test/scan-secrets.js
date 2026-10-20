@@ -75,6 +75,41 @@ try {
   if (envInGitHistory) {
     findings.push({ file: '.env (trong lịch sử git)', line: 1, type: 'File .env từng xuất hiện trong lịch sử git commit cũ' });
   }
+
+  // 3. Quét toàn bộ thay đổi chuẩn bị đẩy lên GitHub giữa main và stabilize
+  const diff = execSync('git diff main..stabilize', { encoding: 'utf8' });
+  const diffLines = diff.split('\n');
+  let currentDiffFile = '';
+
+  diffLines.forEach((line, index) => {
+    if (line.startsWith('+++ b/')) {
+      currentDiffFile = line.replace('+++ b/', '').trim();
+    }
+    if (IGNORE_FILES.includes(path.basename(currentDiffFile))) {
+      return;
+    }
+
+    if (line.startsWith('+') && !line.startsWith('+++')) {
+      if (
+        line.includes('your_imgbb_api_key_here') ||
+        line.includes('IMGBB_API_KEY') ||
+        line.includes('REGEX') ||
+        line.includes('AIza...') ||
+        line.includes('SECRET_PATTERNS')
+      ) {
+        return;
+      }
+      SECRET_PATTERNS.forEach(({ name, regex }) => {
+        if (regex.test(line)) {
+          findings.push({
+            file: `git diff [${currentDiffFile}]`,
+            line: index + 1,
+            type: name
+          });
+        }
+      });
+    }
+  });
 } catch (e) {}
 
 console.log('--- KẾT QUẢ QUÉT BÍ MẬT AN TOÀN (CHỈ BÁO FILE VÀ DÒNG) ---');
