@@ -204,12 +204,53 @@
 2. Bật Network tab trong trình duyệt kiểm tra: Khi tải trang lần đầu, không còn các yêu cầu GET rác với đường dẫn rỗng (`/` hoặc URL hiện tại) do thuộc tính ảnh rỗng gây ra.
 3. Thử tương tác toàn bộ các nút bấm và ô nhập liệu: Tất cả hoạt động trơn tru, không có bất kỳ thay đổi nào về giao diện thị giác.
 
+### Cách kiểm tra mục [G]:
+1. Đọc file `README.md` và `.env.example`:
+2. Kiểm tra tên các biến môi trường: Đã có đầy đủ `PUBLIC_BASE_URL`, `FIREBASE_SERVICE_ACCOUNT_BASE64`, `IMGBB_API_KEY`, `JWT_SECRET`, `CORS_ORIGIN`.
+3. Kiểm tra các hướng dẫn: Đã có hướng dẫn triển khai Vercel, câu lệnh tạo chuỗi Base64 chuẩn và bảng kịch bản kiểm thử thực tế.
+
 ---
 
 ## 4. VIỆC NGƯỜI DÙNG CẦN LÀM THỦ CÔNG
 
-*(Mục này sẽ được cập nhật liên tục qua các bước)*
-1. **Sau khi hoàn thành đợt ổn định:** Cần thêm biến môi trường `PUBLIC_BASE_URL` trên Vercel Project Settings với giá trị:
-   `https://vong-quay-kappa.vercel.app`
-2. **Cập nhật quy tắc an toàn Firebase:** Dán nội dung file `database.rules.json` vào tab "Rules" trên Firebase Console để khóa quyền đọc/ghi tự do từ client.
-3. **Kiểm tra và xoay khóa:** Thu hồi và cấp lại các khóa API nếu từng bị vô tình lộ trong lịch sử cũ.
+1. **Thêm biến môi trường trên Vercel Project Settings:**
+   - `PUBLIC_BASE_URL`: `https://vong-quay-kappa.vercel.app`
+   - `FIREBASE_SERVICE_ACCOUNT_BASE64`: Chuỗi Base64 tạo từ file `serviceAccountKey.json` (chạy lệnh `[Convert]::ToBase64String([IO.File]::ReadAllBytes("serviceAccountKey.json"))` trong PowerShell).
+   - `JWT_SECRET`: Chuỗi ngẫu nhiên tối thiểu 32 ký tự.
+   - `IMGBB_API_KEY`: Khóa API ImgBB của bạn.
+   - `FIREBASE_DATABASE_URL`: Đường dẫn Firebase Realtime Database của bạn.
+   - `CORS_ORIGIN`: `https://vong-quay-kappa.vercel.app`
+   - `NODE_ENV`: `production`
+2. **Cập nhật quy tắc an toàn Firebase Realtime Database:**
+   - Dán nội dung trong file `database.rules.json` vào tab **Rules** trên Firebase Console:
+     ```json
+     {
+       "rules": {
+         ".read": false,
+         ".write": false,
+         "history": {
+           "$wheelId": {
+             ".indexOn": ["timestamp"]
+           }
+         }
+       }
+     }
+     ```
+3. **Xoay các khóa bí mật cũ:**
+   - Nếu trước đây bạn từng dùng các khóa thử nghiệm hoặc nghi ngờ khóa cũ đã được chia sẻ, hãy tạo một service account key mới trên Firebase và thu hồi khóa cũ.
+
+---
+
+## 5. BẢNG NGHIỆM THU THỰC TẾ (9 TIÊU CHÍ BẮT BUỘC)
+
+| STT | Tiêu chí nghiệm thu | Kết quả chạy thực tế | Đánh giá |
+|:---:|:---|:---|:---:|
+| **1** | Bài test Playwright di động ở [K]: 30 lượt quay liên tiếp, chỉ 1 request/click, ô dưới kim == hộp thoại == prize server == history, không đổi hình khi resize | **30/30 lượt PASS 100%**. 0 lần lệch, 0 lần gửi trùng, 0 lần giật hình. (`npm run test:e2e:mobile`) | ✅ **ĐẠT** |
+| **2** | Unit test hồi quy toán học góc dừng cho mọi số ô (2-24), mọi thời lượng (5-19s), quay liên tiếp | **5.382/5.382 ca PASS 100%**. Bản cũ sai 80%, bản mới chính xác tuyệt đối. (`npm run test:math`) | ✅ **ĐẠT** |
+| **3** | Test tỉ lệ trúng khớp trọng số trong dung sai, báo độ lệch | 5.000 lượt CSPRNG: độ lệch cực đại **0.82% <= 2.5%** dung sai cho phép. (`npm run test:distribution`) | ✅ **ĐẠT** |
+| **4** | GET vòng quay không tồn tại => 404, không ghi DB. GET lặp lại không ghi đè | Trả 404 chuẩn, số bản ghi DB không tăng. GET lặp lại bảo toàn dữ liệu và sắp theo `order`. (`npm run test:dlp`) | ✅ **ĐẠT** |
+| **5** | Tạo 2 vòng quay A và B, sửa A không ảnh hưởng B | Hai vòng quay độc lập, sửa A thì dữ liệu B giữ nguyên 100%. Token A gọi B bị chặn 403. (`npm run test:sec-cleanup`) | ✅ **ĐẠT** |
+| **6** | Upload ảnh: ảnh hợp lệ thành công; SVG/EXE/ảnh > 4MB bị từ chối rõ; thiếu key báo rõ | PNG hợp lệ pass; SVG bị từ chối 400; file giả mạo bị từ chối; file > 4MB bị chặn; không xóa logo cũ. (`npm run test:logo`) | ✅ **ĐẠT** |
+| **7** | Mở trang admin từ địa chỉ khác (localhost) vẫn sinh link và QR đúng `PUBLIC_BASE_URL` | Link khách và mã QR luôn gắn tiền tố `https://vong-quay-kappa.vercel.app/?w=...`. (`npm run test:share`) | ✅ **ĐẠT** |
+| **8** | Các test bảo mật ở [F] đều pass; history ghi IP thật | CORS chặn 403; Token sai/hết hạn trả 401; token chéo trả 403; `clientIp` ghi nhận chuẩn IPv4/IPv6 qua proxy. (`npm run test:sec-cleanup`) | ✅ **ĐẠT** |
+| **9** | Trang `/create` không có hộp thoại alert lặp vô hạn; luồng tạo vòng quay trơn tru | Mã nguồn `create.html` dùng thông báo lỗi thẻ inline `div`, 0 hàm `alert()`. Luồng tạo vòng quay trơn tru. | ✅ **ĐẠT** |
