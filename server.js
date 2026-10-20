@@ -69,7 +69,11 @@ app.use(
       if (!origin) {
         return callback(null, true);
       }
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      if (
+        allowedOrigins.includes(origin) ||
+        allowedOrigins.includes('*') ||
+        (config.nodeEnv !== 'production' && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')))
+      ) {
         return callback(null, true);
       }
       return callback(new Error('CORS: Nguồn truy cập bị từ chối do không nằm trong danh sách cho phép.'));
