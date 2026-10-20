@@ -97,12 +97,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin', uploadRoutes);
 app.use('/api/qr', qrRoutes);
 
-// Dự phòng tương thích serverless nếu Vercel rewrite đã strip bỏ tiền tố /api
-app.use('/admin', adminRoutes);
-app.use('/admin', uploadRoutes);
-app.use('/qr', qrRoutes);
-app.use('/wheels', publicRoutes);
-
 // 6. Phục vụ Static Files cho Frontend (Vô hiệu hóa cache trong dev để luôn cập nhật JS/HTML mới nhất)
 app.use(
   express.static(path.join(__dirname, 'public'), {

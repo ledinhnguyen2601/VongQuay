@@ -37,12 +37,12 @@ router.get('/health', (req, res) => {
  * 6 Ô quà mẫu mặc định khi một cửa hàng mới tạo vòng quay
  */
 const DEFAULT_SAMPLE_SEGMENTS = [
-  { id: 'seg_1', text: 'Giảm 20% Hóa Đơn', color: '#EF4444', weight: 20 },
-  { id: 'seg_2', text: 'Miễn Phí 1 Topping', color: '#F97316', weight: 30 },
-  { id: 'seg_3', text: 'Voucher 50.000đ', color: '#EAB308', weight: 10 },
-  { id: 'seg_4', text: 'Chúc Bạn May Mắn', color: '#64748B', weight: 40 },
-  { id: 'seg_5', text: 'Giảm 10.000đ', color: '#10B981', weight: 25 },
-  { id: 'seg_6', text: '1 Ly Trà Sữa Free', color: '#06B6D4', weight: 5 }
+  { id: 'seg_1', text: 'Giảm 20% Hóa Đơn', color: '#EF4444', weight: 20, order: 0 },
+  { id: 'seg_2', text: 'Miễn Phí 1 Topping', color: '#F97316', weight: 30, order: 1 },
+  { id: 'seg_3', text: 'Voucher 50.000đ', color: '#EAB308', weight: 10, order: 2 },
+  { id: 'seg_4', text: 'Chúc Bạn May Mắn', color: '#64748B', weight: 40, order: 3 },
+  { id: 'seg_5', text: 'Giảm 10.000đ', color: '#10B981', weight: 25, order: 4 },
+  { id: 'seg_6', text: '1 Ly Trà Sữa Free', color: '#06B6D4', weight: 5, order: 5 }
 ];
 
 /**
@@ -105,39 +105,43 @@ router.post('/wheels', createWheelLimiter, async (req, res) => {
 });
 
 /**
+ * Chuẩn hóa và sắp xếp các ô quà theo thứ tự order cố định
+ * Tương thích 100% với dữ liệu hiện có (như vòng quay MaCa)
+ */
+function getOrderedSegments(segments) {
+  if (!Array.isArray(segments)) return [];
+  return segments
+    .map((seg, idx) => ({
+      ...seg,
+      order: typeof seg.order === 'number' ? seg.order : idx
+    }))
+    .sort((a, b) => a.order - b.order);
+}
+
+/**
  * GET /api/wheels/:wheelId - Lấy thông tin công khai của vòng quay cho khách
- * BẢO MẬT TUYỆT ĐỐI: KHÔNG BAO GIỜ TRẢ WEIGHT, MẬT KHẨU HAY DỮ LIỆU ADMIN
+ * BẢO MẬT: KHÔNG BAO GIỜ TRẢ WEIGHT, MẬT KHẨU HAY GHI DATABASE TRÊN GET
  */
 router.get('/wheels/:wheelId', async (req, res) => {
   try {
     const { wheelId } = req.params;
-    let wheel = await db.getWheel(wheelId);
+    const wheel = await db.getWheel(wheelId);
 
     if (!wheel) {
-      // Nếu wheelId có cấu trúc hợp lệ (8-24 ký tự), tự động khôi phục dữ liệu để khách quay không bị lỗi 404
-      if (/^[A-Za-z0-9_-]{8,24}$/.test(wheelId)) {
-        wheel = {
-          wheelId,
-          name: 'Vòng Quay May Mắn',
-          background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-          backgroundOpacity: 0.25,
-          segments: DEFAULT_SAMPLE_SEGMENTS,
-          createdAt: new Date().toISOString()
-        };
-        await db.saveWheel(wheelId, wheel);
-      } else {
-        return res.status(404).json({
-          success: false,
-          message: 'Không tìm thấy vòng quay này. Vui lòng kiểm tra lại đường link hoặc mã QR.'
-        });
-      }
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy vòng quay này. Vui lòng kiểm tra lại đường link hoặc mã QR.'
+      });
     }
 
+    const orderedSegments = getOrderedSegments(wheel.segments);
+
     // Lọc chỉ trả về các trường công khai cần thiết cho việc hiển thị và quay
-    const publicSegments = (wheel.segments || []).map((seg) => ({
-      id: seg.id,
+    const publicSegments = orderedSegments.map((seg, idx) => ({
+      id: seg.id || `seg_${idx + 1}`,
       text: seg.text,
-      color: seg.color
+      color: seg.color,
+      order: seg.order
       // TRỌNG SỐ (weight) ĐƯỢC GIẤU KÍN TẠI SERVER
     }));
 
@@ -177,7 +181,9 @@ router.post('/wheels/:wheelId/spin', spinLimiter, async (req, res) => {
       });
     }
 
-    if (!wheel.segments || wheel.segments.length < 2) {
+    const orderedSegments = getOrderedSegments(wheel.segments);
+
+    if (orderedSegments.length < 2) {
       return res.status(400).json({
         success: false,
         message: 'Vòng quay chưa được thiết lập đủ số ô quà để có thể quay thưởng.'
@@ -185,7 +191,7 @@ router.post('/wheels/:wheelId/spin', spinLimiter, async (req, res) => {
     }
 
     // Thuật toán rút thăm bằng crypto.randomInt dựa trên trọng số bảo mật tại server
-    const { targetIndex, selectedSegment } = spinWheel(wheel.segments);
+    const { targetIndex, selectedSegment } = spinWheel(orderedSegments);
 
     // Hàm lấy IP thật chuẩn xác của khách, không cắt xén sai lệch IPv6 localhost (::1)
     const getClientIp = (request) => {

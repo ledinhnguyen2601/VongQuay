@@ -111,13 +111,17 @@ function validateSegments(segments) {
       id: item.id && typeof item.id === 'string' ? item.id.slice(0, 36) : `seg_${i + 1}`,
       text: escapeHtml(text),
       color: color.toUpperCase(),
-      weight: parseFloat(weight.toFixed(4))
+      weight: parseFloat(weight.toFixed(4)),
+      order: typeof item.order === 'number' ? item.order : i
     });
   }
 
   if (totalWeight <= 0) {
     return { valid: false, message: 'Tổng trọng số của tất cả các ô quà phải lớn hơn 0 để có thể quay thưởng.' };
   }
+
+  // Đảm bảo sắp xếp đúng theo order cố định
+  validatedSegments.sort((a, b) => a.order - b.order);
 
   return {
     valid: true,

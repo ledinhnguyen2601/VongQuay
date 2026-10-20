@@ -14,7 +14,6 @@ const {
   validateBackgroundOpacity,
   validateImageUrl
 } = require('../services/validate');
-const { DEFAULT_SAMPLE_SEGMENTS } = require('../data/defaultSegments');
 
 const router = express.Router();
 
@@ -78,24 +77,26 @@ router.post('/wheels/:wheelId/login', loginLimiter, async (req, res) => {
 router.get('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
   try {
     const { wheelId } = req.params;
-    let wheel = await db.getWheel(wheelId);
+    const wheel = await db.getWheel(wheelId);
 
-    // Tự động khôi phục cấu hình cho Admin đã xác thực token hợp lệ nếu serverless instance vừa khởi động lại
     if (!wheel) {
-      wheel = {
-        wheelId,
-        name: 'Vòng Quay May Mắn',
-        background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        backgroundOpacity: 0.25,
-        segments: DEFAULT_SAMPLE_SEGMENTS,
-        createdAt: new Date().toISOString()
-      };
-      await db.saveWheel(wheelId, wheel);
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy vòng quay này.'
+      });
     }
 
+    // Chuẩn hóa và sắp xếp các ô quà theo order cố định
+    const orderedSegments = (wheel.segments || [])
+      .map((seg, idx) => ({
+        ...seg,
+        order: typeof seg.order === 'number' ? seg.order : idx
+      }))
+      .sort((a, b) => a.order - b.order);
+
     // Tính toán tổng trọng số và % xác suất hiển thị cho admin
-    const totalWeight = (wheel.segments || []).reduce((acc, seg) => acc + (Number(seg.weight) || 0), 0);
-    const segmentsWithPercent = (wheel.segments || []).map((seg) => {
+    const totalWeight = orderedSegments.reduce((acc, seg) => acc + (Number(seg.weight) || 0), 0);
+    const segmentsWithPercent = orderedSegments.map((seg) => {
       const w = Number(seg.weight) || 0;
       const percent = totalWeight > 0 ? ((w / totalWeight) * 100).toFixed(2) : '0.00';
       return {
@@ -103,7 +104,8 @@ router.get('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
         text: seg.text,
         color: seg.color,
         weight: w,
-        percentage: `${percent}%`
+        percentage: `${percent}%`,
+        order: seg.order
       };
     });
 
@@ -140,14 +142,12 @@ router.put('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
     const { wheelId } = req.params;
     const { name, logoUrl, background, backgroundOpacity, segments } = req.body;
 
-    let existingWheel = await db.getWheel(wheelId);
+    const existingWheel = await db.getWheel(wheelId);
     if (!existingWheel) {
-      existingWheel = {
-        wheelId,
-        name: typeof name === 'string' ? name.trim() : 'Vòng Quay May Mắn',
-        createdAt: new Date().toISOString()
-      };
-      await db.saveWheel(wheelId, existingWheel);
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy vòng quay này.'
+      });
     }
 
     const updates = {};

@@ -15,7 +15,7 @@
 | **[K]** | Bộ kiểm thử tự động trình duyệt thật (Playwright mobile simulation) | **Đã kiểm thử thật** | `test/playwright-mobile-e2e.test.js`, `package.json` | 30/30 lượt quay giả lập iPhone (390x844) PASS: 1 request/click, ô dưới kim == modal == server prize == history, không giật hình khi resize. |
 | **[A]** | Hồi quy toán học góc dừng vòng quay (Unit test) | **Đã kiểm thử thật** | `test/wheel-math-regression.test.js`, `package.json` | 5,382 ca kiểm thử toàn diện (2-24 ô, 5-19s) PASS 100%. Chứng minh bản cũ sai 80% (432/540 ca). 100 lượt quay liên tiếp PASS. |
 | **[D]** | Nền tảng dữ liệu (Kiểm tra Firebase Production & GET /api/health) | **Đã kiểm thử thật** | `src/config.js`, `src/db.js`, `src/routes/public.js`, `test/test-data-foundation.js` | Từ chối chạy In-Memory khi production thiếu Firebase; GET /api/health chuẩn hóa {status, firebase, env, timestamp}. |
-| **[B]** | Chống mất dữ liệu (Không ghi DB khi GET, cập nhật từng phần, thứ tự ô cố định) | **Chưa làm** | `src/routes/public.js`, `src/routes/admin.js`, `server.js` | Xóa route dư thừa, bảo vệ vòng quay "MaCa". |
+| **[B]** | Chống mất dữ liệu (Không ghi DB khi GET, cập nhật từng phần, thứ tự ô cố định) | **Đã kiểm thử thật** | `src/routes/public.js`, `src/routes/admin.js`, `src/services/validate.js`, `server.js`, `test/test-data-loss-prevention.js` | GET không tồn tại -> 404 (không ghi DB); PUT không tồn tại -> 404; cập nhật từng phần bảo toàn logo/nền; thứ tự ô sắp theo order; xóa sạch route trùng. |
 | **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Chưa làm** | `test/test-distribution-real.js` | So khớp tần suất thực tế với trọng số cấu hình. |
 | **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Chưa làm** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js` | Xử lý lỗi tải ảnh an toàn, thân thiện. |
 | **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Chưa làm** | `src/config.js`, `src/routes/qr.js`, `public/js/admin.js` | Tránh phụ thuộc host nội bộ Vercel. |
@@ -70,9 +70,15 @@
 - **Chứng minh công thức mới:** 5,382 / 5,382 ca kiểm thử (100% PASS) cho mọi số ô từ 2 đến 24, mọi vị trí ô trúng, và mọi thời lượng từ 5000ms đến 19000ms.
 - **Kiểm thử liên tiếp:** 100 lượt quay kế tiếp nhau liên tục, kim luôn chỉ đúng tâm ô đích đã chỉ định.
 
-### Bằng chứng chạy thật mục [B]: Kiểm chứng Firebase `ref.update({ segments: [...] })`
-- **Kịch bản:** Tạo node trên Firebase Realtime Database thật với mảng 3 phần tử (index 0, 1, 2). Sau đó gọi `ref.update({ segments: [item0] })` (mảng thu gọn chỉ còn 1 phần tử).
-- **Kết quả đọc lại từ Firebase:** `segments` chỉ còn đúng 1 phần tử mới. Firebase Realtime Database SDK đã ghi đè toàn bộ mảng `segments`, **KHÔNG HỀ ĐỂ LẠI KHÓA THỪA** `"1"` hay `"2"`. Do đó, nhận định ban đầu về việc để lại khóa thừa khi update mảng đã được bác bỏ bằng chứng cứ chạy thật.
+### Bằng chứng chạy thật mục [B]: Chống mất dữ liệu và an toàn cấu hình
+- **Kiểm chứng cập nhật mảng Firebase:** Kịch bản tạo node trên Firebase Realtime Database thật với mảng 3 phần tử (index 0, 1, 2), sau đó gọi `ref.update({ segments: [item0] })`. Đọc lại từ Firebase chứng minh mảng được ghi đè sạch sẽ, **KHÔNG để lại khóa thừa** `"1"` hay `"2"`.
+- **Rà soát danh sách vòng quay hiện hữu trên Firebase:** Đã chạy script `test/inspect-firebase-wheels.js` đọc danh sách toàn bộ 24 vòng quay trên Firebase thật. Vòng quay thật "MaCa" (mã `ZyS_NAGdT2vh`) và 23 vòng quay khác được giữ nguyên vẹn 100%, không bị sửa hay xóa.
+- **Loại bỏ ghi tự động khi GET:** Trước đây `GET /api/wheels/:wheelId` nếu không tìm thấy wheelId (8-24 ký tự) sẽ tự sinh 1 bản ghi mẫu ghi đè vào database. Nay đã xóa bỏ hoàn toàn: vòng quay không tồn tại trả ngay 404, database không bị ghi bất kỳ byte nào.
+- **Loại bỏ tự tạo khi PUT:** `PUT /api/admin/wheels/:wheelId` nếu không tìm thấy vòng quay thì trả ngay 404, không tự ý tạo mới.
+- **Bảo toàn cấu hình bằng cập nhật từng phần:** Dùng `ref.update(updates)` (patch). Cập nhật tên vòng quay không làm mất `logoUrl`, `background`, `backgroundOpacity` hay `segments`.
+- **Thứ tự ô quà cố định (`order`):** Gán trường `order: 0, 1, 2...` cho từng ô quà. Hàm `getOrderedSegments` luôn sắp xếp mảng theo `order` trước khi trả về cho khách (Public GET), cho trang Admin (Admin GET) và khi bốc thăm (`spinWheel`). Tương thích hoàn hảo với các vòng quay đã lưu (như "MaCa").
+- **Dọn sạch route trùng lặp:** Đã xóa bỏ các route không tiền tố `/admin`, `/qr`, `/wheels` trong `server.js`. Route trả trang HTML `/admin` và `/admin.html` vẫn hoạt động độc lập bình thường.
+- **Kết quả kiểm thử tự động:** Bộ test `test/test-data-loss-prevention.js` PASS toàn bộ 6/6 kịch bản.
 
 ---
 
@@ -88,6 +94,14 @@
    - Khi kim dừng thẳng đứng vào chính giữa một ô quà (ví dụ "Giảm 15%"), hộp thoại bật lên PHẢI ghi chính xác 100% tên món quà đó ("Giảm 15%").
    - Trong lúc vòng quay đang chạy hoặc khi vừa dừng, thử vuốt màn hình lên/xuống để thanh địa chỉ ẩn/hiện (kích hoạt sự kiện resize): vòng quay không bị giật hay nhảy hình.
    - Vào trang Admin -> mục "Lịch sử quay thưởng": Mỗi lần bấm quay chỉ xuất hiện DUY NHẤT 1 dòng lịch sử, cột IP ghi nhận đúng định dạng IP (ví dụ `127.0.0.1` hoặc IPv4/IPv6 công khai của điện thoại, không bao giờ là số `1` trơ trọi).
+
+### Cách kiểm tra mục [B]:
+1. Mở trình duyệt trên điện thoại hoặc máy tính, gõ một đường link vòng quay không tồn tại, ví dụ:
+   `https://vong-quay-kappa.vercel.app/?w=khong_ton_tai_123`
+2. **Quan sát:** Trang hiển thị thông báo lỗi "Không tìm thấy vòng quay này" rõ ràng, không tự ý tạo ra một vòng quay trắng hay vòng quay mẫu.
+3. Đăng nhập trang Admin của một vòng quay có thật, thử đổi "Tên vòng quay" rồi bấm Lưu:
+4. **Quan sát:** Logo, hình nền, độ mờ và danh sách các ô quà vẫn giữ nguyên vẹn, không bị mất hay reset về giá trị mặc định.
+5. Kiểm tra thứ tự ô quà: Các ô quà hiển thị trên vòng quay của khách quay khớp chính xác 100% theo đúng thứ tự từ trên xuống dưới trong bảng quản trị Admin.
 
 ---
 
