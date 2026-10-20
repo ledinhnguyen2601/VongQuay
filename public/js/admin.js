@@ -41,23 +41,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Khởi tạo các sự kiện
   initAdminEvents();
 
-  // Đọc dữ liệu từ local cache nếu có để hiển thị tức thì (Instant Load 0ms, chống mục trắng)
-  const cachedWheel = sessionStorage.getItem(`admin_wheel_cache_${currentWheelId}`);
-  if (cachedWheel) {
-    try {
-      wheelData = JSON.parse(cachedWheel);
-      renderAdminUI();
-      const adminSection = document.getElementById('adminSection');
-      const loadingState = document.getElementById('adminLoadingState');
-      if (adminSection) adminSection.classList.remove('hidden');
-      if (loadingState) loadingState.classList.add('hidden');
-    } catch (e) {}
-  }
-
   // Kiểm tra token đã lưu trong sessionStorage chưa
   const savedToken = sessionStorage.getItem(`admin_token_${currentWheelId}`);
   if (savedToken) {
     currentAdminToken = savedToken;
+    // Đọc dữ liệu từ local cache nếu có để hiển thị tức thì (chỉ khi đã đăng nhập)
+    const cachedWheel = sessionStorage.getItem(`admin_wheel_cache_${currentWheelId}`);
+    if (cachedWheel) {
+      try {
+        wheelData = JSON.parse(cachedWheel);
+        renderAdminUI();
+        const adminSection = document.getElementById('adminSection');
+        const loadingState = document.getElementById('adminLoadingState');
+        if (adminSection) adminSection.classList.remove('hidden');
+        if (loadingState) loadingState.classList.add('hidden');
+      } catch (e) {}
+    }
     loadAdminWheelData();
   } else {
     showLoginForm();
@@ -240,7 +239,10 @@ async function loadAdminWheelData() {
 
     if (res.status === 401 || res.status === 403) {
       sessionStorage.removeItem(`admin_token_${currentWheelId}`);
+      sessionStorage.removeItem(`admin_wheel_cache_${currentWheelId}`);
+      wheelData = null;
       if (loadingState) loadingState.classList.add('hidden');
+      if (adminSection) adminSection.classList.add('hidden');
       showLoginForm();
       return;
     }
@@ -304,9 +306,10 @@ function renderAdminUI() {
   // 4. Danh sách ô quà và trọng số
   renderSegmentsTable();
 
-  // 5. Link chơi của khách
+  // 5. Link chơi của khách: Luôn lấy từ PUBLIC_BASE_URL (không dùng window.location.origin)
   const playerLinkInput = document.getElementById('playerShareLink');
-  const playUrl = `${window.location.origin}/?w=${encodeURIComponent(currentWheelId)}`;
+  const baseUrl = (wheelData && wheelData.publicBaseUrl) ? wheelData.publicBaseUrl.replace(/\/+$/, '') : 'https://vong-quay-kappa.vercel.app';
+  const playUrl = `${baseUrl}/?w=${encodeURIComponent(currentWheelId)}`;
   if (playerLinkInput) playerLinkInput.value = playUrl;
 
   const goToPlayBtn = document.getElementById('goToPlayBtn');

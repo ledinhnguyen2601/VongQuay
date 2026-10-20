@@ -8,6 +8,7 @@ const express = require('express');
 const QRCode = require('qrcode');
 const sharp = require('sharp');
 const db = require('../db');
+const config = require('../config');
 
 const router = express.Router();
 
@@ -36,10 +37,8 @@ router.get('/:wheelId', async (req, res) => {
     const wheel = await db.getWheel(wheelId);
     const logoToUse = (wheel && wheel.logoUrl) ? wheel.logoUrl : (req.query.logoUrl || '');
 
-    // Xây dựng URL trang quay cho người chơi (tuyệt đối không chứa thông tin admin)
-    const host = req.get('host');
-    const protocol = req.protocol;
-    const playUrl = `${protocol}://${host}/?w=${wheelId}`;
+    // Xây dựng URL trang quay cho người chơi chuẩn xác từ PUBLIC_BASE_URL (không dùng host request)
+    const playUrl = `${config.publicBaseUrl}/?w=${encodeURIComponent(wheelId)}`;
 
     const qrSize = Math.min(Math.max(parseInt(size, 10) || 600, 200), 1200);
 

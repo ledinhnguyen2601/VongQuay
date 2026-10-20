@@ -6,6 +6,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db');
+const config = require('../config');
 const { authenticateAdmin, generateAdminToken } = require('../middleware/auth');
 const { loginLimiter } = require('../middleware/rateLimiter');
 const {
@@ -121,7 +122,8 @@ router.get('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
         segments: segmentsWithPercent,
         totalWeight,
         createdAt: wheel.createdAt,
-        updatedAt: wheel.updatedAt
+        updatedAt: wheel.updatedAt,
+        publicBaseUrl: config.publicBaseUrl
       }
     });
   } catch (error) {

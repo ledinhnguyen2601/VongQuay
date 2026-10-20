@@ -18,6 +18,7 @@ const config = {
   jwtSecret: process.env.JWT_SECRET || 'lucky_wheel_saas_production_secure_fallback_jwt_secret_key_2026_x99a',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   imgbbApiKey: process.env.IMGBB_API_KEY || '',
+  publicBaseUrl: (process.env.PUBLIC_BASE_URL || 'https://vong-quay-kappa.vercel.app').replace(/\/+$/, ''),
   firebase: {
     serviceAccountBase64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '',
     serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '',
@@ -30,6 +31,10 @@ const config = {
  * Cảnh báo log rõ ràng, không gọi process.exit(1) để chống sập Serverless Function trên Vercel
  */
 function validateConfig() {
+  if (config.nodeEnv === 'production' && !process.env.PUBLIC_BASE_URL) {
+    throw new Error('❌ [CẤU HÌNH PRODUCTION LỖI]: Thiếu biến môi trường bắt buộc PUBLIC_BASE_URL trong môi trường production. Vui lòng cấu hình PUBLIC_BASE_URL=https://vong-quay-kappa.vercel.app trên Vercel Project Settings.');
+  }
+
   if (!process.env.JWT_SECRET) {
     console.warn('⚠️ [CẢNH BÁO]: JWT_SECRET chưa được cấu hình trong biến môi trường Vercel. Đang dùng khóa bảo mật dự phòng.');
   }

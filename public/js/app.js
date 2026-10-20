@@ -184,6 +184,12 @@ function renderWheelData(data, wheelId) {
     if (defaultLogoPlaceholder) defaultLogoPlaceholder.classList.remove('hidden');
   }
 
+  // Lối vào Quản Trị gắn ở khối logo trang khách (/admin?w=...)
+  const brandAdminLink = document.getElementById('brandAdminLink');
+  if (brandAdminLink && wheelId) {
+    brandAdminLink.href = `/admin?w=${encodeURIComponent(wheelId)}`;
+  }
+
   // Áp dụng Nền và Lớp phủ (Overlay)
   applyBackground(data.background, data.backgroundOpacity);
 

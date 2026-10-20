@@ -41,7 +41,7 @@ function authenticateAdmin(req, res, next) {
             message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!'
           });
         }
-        return res.status(403).json({
+        return res.status(401).json({
           success: false,
           message: 'Token xác thực không hợp lệ hoặc đã bị thay đổi.'
         });

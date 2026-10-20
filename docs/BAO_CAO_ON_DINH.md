@@ -18,7 +18,7 @@
 | **[B]** | Chống mất dữ liệu (Không ghi DB khi GET, cập nhật từng phần, thứ tự ô cố định) | **Đã kiểm thử thật** | `src/routes/public.js`, `src/routes/admin.js`, `src/services/validate.js`, `server.js`, `test/test-data-loss-prevention.js` | GET không tồn tại -> 404 (không ghi DB); PUT không tồn tại -> 404; cập nhật từng phần bảo toàn logo/nền; thứ tự ô sắp theo order; xóa sạch route trùng. |
 | **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Đã kiểm thử thật** | `test/test-distribution-real.js`, `src/services/spin.js`, `package.json` | 5,000 lượt CSPRNG hội tụ hoàn hảo (max deviation 1.46% <= 2.5%); thứ tự ô API bốc thăm và trả khách khớp 100%; History lưu 100% đúng giải server bốc. |
 | **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Đã kiểm thử thật** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js`, `src/routes/admin.js`, `test/test-logo-and-background.js` | Giới hạn 4MB; từ chối SVG/EXE; thiếu IMGBB_API_KEY báo lỗi rõ và không sinh Data URI; chỉ nhận https và domain i.ibb.co; upload lỗi không xóa logo/nền cũ. |
-| **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Chưa làm** | `src/config.js`, `src/routes/qr.js`, `public/js/admin.js` | Tránh phụ thuộc host nội bộ Vercel. |
+| **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Đã kiểm thử thật** | `src/config.js`, `src/routes/qr.js`, `src/routes/admin.js`, `public/js/admin.js`, `public/js/app.js`, `test/test-share-link-and-qr.js` | Thêm PUBLIC_BASE_URL (bắt buộc trong prod); link chia sẻ và QR luôn dựng từ biến này; logo khách trỏ về /admin?w=...; chưa đăng nhập/hết hạn hiện login rõ ràng, không lộ dữ liệu. |
 | **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Chưa làm** | `server.js`, `src/config.js`, `src/middleware/auth.js` | Khóa CORS, kiểm tra audit và cô lập tenant. |
 | **[I]** | Rà soát và xử lý cảnh báo trình soạn code (Problems) | **Chưa làm** | `public/admin.html`, `public/index.html` | Xử lý các lỗi HTML/JS thực tế. |
 | **[G]** | Cập nhật tài liệu kỹ thuật trung thực (`README.md`) | **Chưa làm** | `README.md` | Xóa bỏ các khẳng định phóng đại, chuẩn hóa biến môi trường. |
@@ -95,6 +95,13 @@
 - **Ràng buộc URL ảnh nghiêm ngặt:** Hàm `validateImageUrl` chỉ chấp nhận giao thức bảo mật `https://` và thuộc tên miền ImgBB (`i.ibb.co` hoặc `ibb.co`).
 - **Bảo toàn dữ liệu khi tải ảnh lỗi:** Đã kiểm thử qua HTTP: khi việc tải ảnh mới bị lỗi hoặc bị từ chối, logo và hình nền hiện hữu trong database của vòng quay được giữ nguyên vẹn 100%.
 
+### Kết quả kiểm định thực tế mục [E]: Link chia sẻ chuẩn, Mã QR và Lối vào Admin
+- **Cấu hình `PUBLIC_BASE_URL` bắt buộc:** Đã tích hợp `config.publicBaseUrl` (mặc định `https://vong-quay-kappa.vercel.app`). Trong môi trường Production (`NODE_ENV=production`), nếu thiếu biến này máy chủ sẽ từ chối khởi động và báo lỗi cấu hình nghiêm trọng.
+- **Độc lập khỏi host nội bộ Vercel:** Mã QR Code (`GET /api/qr/:wheelId`) và ô Link chia sẻ ở trang Quản Trị luôn sinh URL chuẩn `https://vong-quay-kappa.vercel.app/?w=...`, hoàn toàn không phụ thuộc vào `req.host` hay `window.location.origin` (tránh bị dẫn link vào các URL nhánh của Vercel dạng `*-nguyens-projects-*.vercel.app` vốn bị Vercel khóa đăng nhập).
+- **Lối vào Admin gắn vào Logo:** Header trang khách đã gắn `brandAdminLink.href = /admin?w=${wheelId}`. Khi chủ quán mở vòng quay của mình, chỉ cần chạm vào logo là chuyển thẳng sang trang Quản Trị vòng quay đó.
+- **Bảo vệ màn hình Admin:** Khi truy cập trang admin chưa đăng nhập hoặc token hết hạn, toàn bộ giao diện quản trị và dữ liệu cache cũ bị ẩn triệt để, form đăng nhập hiển thị rõ ràng, không bị trắng trang và không lộ bất kỳ dữ liệu nhạy cảm nào.
+- **Bật `trust proxy`:** Đã cấu hình `app.set('trust proxy', 1)` trong `server.js` để Express đọc đúng header `x-forwarded-for` khi chạy sau Vercel Reverse Proxy.
+
 ---
 
 ## 3. CÁCH TỰ KIỂM TRA BẰNG MẮT (DÀNH CHO NGƯỜI DÙNG TRÊN ĐIỆN THOẠI)
@@ -132,6 +139,15 @@
    - Màn hình xem trước hiển thị ngay ảnh mới.
    - Mã QR xem trước ở bên dưới tự động lồng logo mới vào chính giữa mã QR.
    - Mở link khách trên điện thoại: Logo mới hiển thị sắc nét ở phần đầu trang và ở tâm của vòng quay.
+
+### Cách kiểm tra mục [E]:
+1. Mở trang quản trị Admin từ bất kỳ địa chỉ nào (ví dụ chạy thử nghiệm trên máy hoặc trên link xem trước):
+   - Nhìn vào ô "Link quay thưởng cho khách": Link hiển thị luôn có dạng bắt đầu bằng `https://vong-quay-kappa.vercel.app/?w=...`, không bao giờ mang tên miền riêng hay cổng localhost.
+   - Quét mã QR bằng điện thoại: Trình duyệt mở ra đúng địa chỉ `https://vong-quay-kappa.vercel.app/?w=...`.
+2. Mở trang quay thưởng của khách:
+   - Chạm vào khối Logo/Tên quán ở góc trên cùng: Trình duyệt chuyển ngay sang trang Quản Trị `/admin?w=...`.
+3. Mở trang `/admin?w=...` trong cửa sổ ẩn danh (chưa đăng nhập):
+   - Màn hình đăng nhập bật lên ngay ngắn ở giữa, dữ liệu cài đặt của quán bị ẩn hoàn toàn, không có hiện tượng chớp nháy lộ thông tin hay trang trắng.
 
 ---
 
