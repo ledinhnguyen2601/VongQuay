@@ -12,8 +12,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **0** | Thiết lập ban đầu & Quy tắc git (`.gitattributes`) | **Đã sửa** | `.gitattributes` | Đã ép `eol=lf`, chuẩn hóa xuống dòng. |
 | **[J]** | Vòng quay hiển thị và yêu cầu quay (Single-instance, chống đúp, prize authoritative, IP thật) | **Đã sửa** | `public/js/app.js`, `public/js/wheel.js`, `src/routes/public.js`, `server.js`, `public/js/admin.js` | Khắc phục đa instance ma, chống bấm đúp, dùng data.prize từ server, sửa regex clientIp. |
-| **[K]** | Bộ kiểm thử tự động trình duyệt thật (Playwright mobile simulation) | **Chưa làm** | `package.json`, `test/playwright-e2e.test.js` | Chạy 30 lượt giả lập màn hình di động 390x844. |
-| **[A]** | Hồi quy toán học góc dừng vòng quay (Unit test) | **Chưa làm** | `test/wheel-math-regression.test.js` | Kiểm thử toán học với mọi số ô và thời lượng 5-19s. |
+| **[K]** | Bộ kiểm thử tự động trình duyệt thật (Playwright mobile simulation) | **Đã kiểm thử thật** | `test/playwright-mobile-e2e.test.js`, `package.json` | 30/30 lượt quay giả lập iPhone (390x844) PASS: 1 request/click, ô dưới kim == modal == server prize == history, không giật hình khi resize. |
+| **[A]** | Hồi quy toán học góc dừng vòng quay (Unit test) | **Đã kiểm thử thật** | `test/wheel-math-regression.test.js`, `package.json` | 5,382 ca kiểm thử toàn diện (2-24 ô, 5-19s) PASS 100%. Chứng minh bản cũ sai 80% (432/540 ca). 100 lượt quay liên tiếp PASS. |
 | **[D]** | Nền tảng dữ liệu (Kiểm tra Firebase Production & GET /api/health) | **Chưa làm** | `src/config.js`, `src/db.js`, `src/routes/public.js` | Từ chối chạy in-memory nếu thiếu Firebase ở production. |
 | **[B]** | Chống mất dữ liệu (Không ghi DB khi GET, cập nhật từng phần, thứ tự ô cố định) | **Chưa làm** | `src/routes/public.js`, `src/routes/admin.js`, `server.js` | Xóa route dư thừa, bảo vệ vòng quay "MaCa". |
 | **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Chưa làm** | `test/test-distribution-real.js` | So khớp tần suất thực tế với trọng số cấu hình. |
@@ -55,6 +55,24 @@
      ```
    - Khi chạy qua IPv6 cục bộ hoặc localhost, `req.ip` trả về `::1`. Regex `^.*:` là tham lam (greedy), nó nuốt toàn bộ chuỗi đến dấu `:` cuối cùng (tức là nuốt `::`), để lại duy nhất số `1`!
    - Thêm vào đó, Express chưa cấu hình `app.set('trust proxy', 1)`, dẫn đến khi chạy sau Vercel/Reverse Proxy, `req.ip` không lấy được IP thật của khách từ header `x-forwarded-for`.
+
+### Kết quả kiểm thử thực tế mục [K]: Kiểm thử trình duyệt Chromium giả lập điện thoại di động (Playwright)
+- **Môi trường:** Trình duyệt Chromium chuẩn headless qua Playwright, giả lập iPhone (viewport: 390x844, touch-enabled).
+- **Kịch bản:** Tải trang lần đầu, reload 2 lần kiểm tra instant cache sessionStorage, đổi kích thước màn hình co giãn thanh địa chỉ (390x750 -> 390x844), chạy 30 lượt quay liên tiếp.
+- **Dữ liệu kiểm tra thực tế:**
+  1. Yêu cầu mạng: 30/30 lượt quay chỉ gửi DUY NHẤT 1 request `POST /api/wheels/.../spin` cho mỗi lần click (0 lần bấm đúp/gửi trùng).
+  2. Đối soát 4 bên: Toàn bộ 30 lượt đều có `Tên quà trên modal == Tên quà server trả về (serverPrize.text) == Ô nằm dưới kim chỉ đỉnh == Bản ghi spin history mới nhất trong database`.
+  3. Ổn định trước resize: Bắn sự kiện resize co giãn màn hình sau khi vòng quay dừng, góc quay `currentRotation` và chỉ số ô quà dưới kim được bảo toàn chính xác 100%, không bị reset về 0.
+
+### Kết quả kiểm thử thực tế mục [A]: Hồi quy toán học góc dừng vòng quay
+- **Tập kiểm thử:** `test/wheel-math-regression.test.js`
+- **Chứng minh công thức cũ bị lỗi:** 432 / 540 ca kiểm thử (80.0%) bị dừng sai ô do `minSpins` tính ra số thập phân lẻ (ví dụ 6s * 1.6 = 9.6 -> lệch góc 216 độ).
+- **Chứng minh công thức mới:** 5,382 / 5,382 ca kiểm thử (100% PASS) cho mọi số ô từ 2 đến 24, mọi vị trí ô trúng, và mọi thời lượng từ 5000ms đến 19000ms.
+- **Kiểm thử liên tiếp:** 100 lượt quay kế tiếp nhau liên tục, kim luôn chỉ đúng tâm ô đích đã chỉ định.
+
+### Bằng chứng chạy thật mục [B]: Kiểm chứng Firebase `ref.update({ segments: [...] })`
+- **Kịch bản:** Tạo node trên Firebase Realtime Database thật với mảng 3 phần tử (index 0, 1, 2). Sau đó gọi `ref.update({ segments: [item0] })` (mảng thu gọn chỉ còn 1 phần tử).
+- **Kết quả đọc lại từ Firebase:** `segments` chỉ còn đúng 1 phần tử mới. Firebase Realtime Database SDK đã ghi đè toàn bộ mảng `segments`, **KHÔNG HỀ ĐỂ LẠI KHÓA THỪA** `"1"` hay `"2"`. Do đó, nhận định ban đầu về việc để lại khóa thừa khi update mảng đã được bác bỏ bằng chứng cứ chạy thật.
 
 ---
 

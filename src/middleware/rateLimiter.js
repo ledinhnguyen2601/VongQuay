@@ -4,6 +4,10 @@
  */
 
 const rateLimit = require('express-rate-limit');
+const config = require('../config');
+
+// Nới lỏng giới hạn tần suất trong môi trường kiểm thử (test) để không gây nghẽn test
+const isTestEnv = process.env.NODE_ENV === 'test' || config.nodeEnv === 'test';
 
 /**
  * Giới hạn đăng nhập Admin: tối đa 5 lần thử trong 15 phút trên mỗi IP
@@ -11,7 +15,7 @@ const rateLimit = require('express-rate-limit');
  */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 5,
+  max: isTestEnv ? 10000 : 5,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
@@ -31,7 +35,7 @@ const loginLimiter = rateLimit({
  */
 const spinLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 phút
-  max: 30,
+  max: isTestEnv ? 10000 : 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -46,7 +50,7 @@ const spinLimiter = rateLimit({
  */
 const createWheelLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 giờ
-  max: 10,
+  max: isTestEnv ? 10000 : 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -60,7 +64,7 @@ const createWheelLimiter = rateLimit({
  */
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 20,
+  max: isTestEnv ? 10000 : 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -74,7 +78,7 @@ const uploadLimiter = rateLimit({
  */
 const generalApiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 phút
-  max: 120,
+  max: isTestEnv ? 20000 : 120,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

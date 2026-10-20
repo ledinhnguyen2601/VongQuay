@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "node server.js",
     "test:spin": "node test/test-spin.js",
-    "test:security": "node test/test-security.js"
+    "test:security": "node test/test-security.js",
+    "test:math": "node test/wheel-math-regression.test.js",
+    "test:e2e:mobile": "node test/playwright-mobile-e2e.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -31,5 +33,8 @@
     "security"
   ],
   "author": "Senior Full-Stack Engineer",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
 }

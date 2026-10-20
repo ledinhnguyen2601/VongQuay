@@ -256,6 +256,7 @@ function setupWheelCanvas(segments, logoUrl) {
       handleSpinSuccess(currentPendingPrize, targetIndex);
     }
   });
+  window.currentWheelInstance = currentWheelInstance;
 }
 
 /**
