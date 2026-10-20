@@ -15,7 +15,7 @@ const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5 Megabytes
+    fileSize: 4 * 1024 * 1024 // 4 Megabytes (dưới giới hạn 4.5MB của Vercel)
   }
 });
 
@@ -55,13 +55,13 @@ router.post(
   }
 );
 
-// Xử lý lỗi từ Multer (ví dụ vượt quá 5MB)
+// Xử lý lỗi từ Multer (ví dụ vượt quá 4MB)
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'Dung lượng file vượt quá giới hạn tối đa 5MB.'
+        message: 'Dung lượng ảnh vượt quá giới hạn tối đa 4MB. Vui lòng chọn ảnh nhỏ hơn để tối ưu tốc độ trên điện thoại.'
       });
     }
     return res.status(400).json({

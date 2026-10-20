@@ -21,10 +21,10 @@ async function inspectImageBuffer(buffer) {
     throw new Error('File tải lên bị rỗng.');
   }
 
-  // Giới hạn dung lượng tối đa 5MB (5 * 1024 * 1024 bytes)
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  // Giới hạn dung lượng tối đa 4MB (dưới ngưỡng 4.5MB của Vercel)
+  const MAX_FILE_SIZE = 4 * 1024 * 1024;
   if (buffer.length > MAX_FILE_SIZE) {
-    throw new Error('Dung lượng ảnh vượt quá giới hạn cho phép (tối đa 5MB).');
+    throw new Error('Dung lượng ảnh vượt quá giới hạn 4MB. Vui lòng chọn ảnh nhỏ hơn để đảm bảo tải nhanh trên điện thoại.');
   }
 
   try {
@@ -41,7 +41,7 @@ async function inspectImageBuffer(buffer) {
 
     return metadata;
   } catch (error) {
-    if (error.message && error.message.includes('không được hỗ trợ')) {
+    if (error.message && (error.message.includes('không được hỗ trợ') || error.message.includes('vượt quá giới hạn'))) {
       throw error;
     }
     throw new Error('Tệp tải lên bị hỏng hoặc chứa mã độc giả mạo ảnh.');
@@ -57,13 +57,11 @@ async function inspectImageBuffer(buffer) {
  */
 async function uploadToImgBB(buffer, originalName = 'upload.png') {
   // Kiểm tra magic bytes trước tiên
-  const metadata = await inspectImageBuffer(buffer);
+  await inspectImageBuffer(buffer);
 
-  // Nếu không có API Key trong môi trường Dev, fallback lưu dạng Data URI an toàn
+  // Thiếu IMGBB_API_KEY: Báo lỗi rõ ràng, tuyệt đối không tạo Data URI rác lưu vào DB
   if (!config.imgbbApiKey) {
-    console.warn('ℹ️ [IMGBB]: Không tìm thấy IMGBB_API_KEY. Chuyển sang Data URI cho môi trường dev.');
-    const mimeType = `image/${metadata.format === 'jpeg' ? 'jpeg' : metadata.format}`;
-    return `data:${mimeType};base64,${buffer.toString('base64')}`;
+    throw new Error('Chưa cấu hình IMGBB_API_KEY trên máy chủ. Vui lòng cấu hình khóa API ImgBB để sử dụng tính năng tải ảnh.');
   }
 
   // Gửi FormData lên endpoint của ImgBB

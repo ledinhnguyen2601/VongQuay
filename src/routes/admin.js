@@ -170,8 +170,13 @@ router.put('/wheels/:wheelId', authenticateAdmin, async (req, res) => {
     if (background !== undefined) {
       // Giới hạn độ dài và lọc các ký tự nguy hiểm
       if (typeof background === 'string' && background.length <= 1000) {
-        // Chỉ chấp nhận cú pháp CSS hợp lệ (linear-gradient, radial-gradient, #hex, url, rgb)
-        updates.background = background.trim();
+        const bgTrimmed = background.trim();
+        if (bgTrimmed.startsWith('http://') || bgTrimmed.startsWith('https://')) {
+          updates.background = validateImageUrl(bgTrimmed);
+        } else {
+          // Chỉ chấp nhận cú pháp CSS hợp lệ (linear-gradient, radial-gradient, #hex, rgb)
+          updates.background = bgTrimmed;
+        }
       }
     }
 

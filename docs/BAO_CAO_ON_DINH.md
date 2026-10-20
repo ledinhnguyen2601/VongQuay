@@ -17,7 +17,7 @@
 | **[D]** | Nền tảng dữ liệu (Kiểm tra Firebase Production & GET /api/health) | **Đã kiểm thử thật** | `src/config.js`, `src/db.js`, `src/routes/public.js`, `test/test-data-foundation.js` | Từ chối chạy In-Memory khi production thiếu Firebase; GET /api/health chuẩn hóa {status, firebase, env, timestamp}. |
 | **[B]** | Chống mất dữ liệu (Không ghi DB khi GET, cập nhật từng phần, thứ tự ô cố định) | **Đã kiểm thử thật** | `src/routes/public.js`, `src/routes/admin.js`, `src/services/validate.js`, `server.js`, `test/test-data-loss-prevention.js` | GET không tồn tại -> 404 (không ghi DB); PUT không tồn tại -> 404; cập nhật từng phần bảo toàn logo/nền; thứ tự ô sắp theo order; xóa sạch route trùng. |
 | **[H]** | Kiểm tra tỷ lệ trúng thưởng thật (Mô phỏng 5000 lượt quay) | **Đã kiểm thử thật** | `test/test-distribution-real.js`, `src/services/spin.js`, `package.json` | 5,000 lượt CSPRNG hội tụ hoàn hảo (max deviation 1.46% <= 2.5%); thứ tự ô API bốc thăm và trả khách khớp 100%; History lưu 100% đúng giải server bốc. |
-| **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Chưa làm** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js` | Xử lý lỗi tải ảnh an toàn, thân thiện. |
+| **[C]** | Quản lý Logo và Ảnh nền (Giới hạn 4MB, không Data URI rác) | **Đã kiểm thử thật** | `src/services/imgbb.js`, `src/routes/upload.js`, `src/services/validate.js`, `src/routes/admin.js`, `test/test-logo-and-background.js` | Giới hạn 4MB; từ chối SVG/EXE; thiếu IMGBB_API_KEY báo lỗi rõ và không sinh Data URI; chỉ nhận https và domain i.ibb.co; upload lỗi không xóa logo/nền cũ. |
 | **[E]** | Link chia sẻ chuẩn `PUBLIC_BASE_URL`, mã QR & lối vào Admin | **Chưa làm** | `src/config.js`, `src/routes/qr.js`, `public/js/admin.js` | Tránh phụ thuộc host nội bộ Vercel. |
 | **[F]** | Dọn dẹp an ninh (CORS, JWT_SECRET, quét bí mật, phân quyền token) | **Chưa làm** | `server.js`, `src/config.js`, `src/middleware/auth.js` | Khóa CORS, kiểm tra audit và cô lập tenant. |
 | **[I]** | Rà soát và xử lý cảnh báo trình soạn code (Problems) | **Chưa làm** | `public/admin.html`, `public/index.html` | Xử lý các lỗi HTML/JS thực tế. |
@@ -88,6 +88,13 @@
 - **Đồng bộ thứ tự ô quà:** Thứ tự ô quà từ `GET /api/wheels/:wheelId` trả về cho khách khớp chính xác 100% với thứ tự ô mảng dùng trong thuật toán bốc thăm `spinWheel`.
 - **Đối soát History chống gian lận client:** 20/20 lượt quay gọi qua API máy chủ cục bộ đều có `prizeText`, `segmentId`, `targetIndex` trong database Firebase khớp 100% với giải do Server chọn và trả về. Phía Client hoàn toàn không có khả năng sửa đổi kết quả hay gửi giải tự chọn lên máy chủ.
 
+### Kết quả kiểm định thực tế mục [C]: Quản lý Logo và Ảnh nền
+- **Giới hạn 4MB:** Đã hạ trần dung lượng tải file xuống `4 * 1024 * 1024` bytes (4MB) tại cả Multer và Sharp (dưới ngưỡng trần 4.5MB của Vercel Serverless Function). Tệp quá 4MB bị chặn với thông báo tiếng Việt rõ ràng.
+- **Bảo mật tệp bằng Sharp Magic Bytes:** Tệp SVG (chứa nguy cơ XSS), tệp nhị phân EXE hoặc tệp văn bản đổi đuôi thành .png đều bị Sharp phát hiện và từ chối ở tầng máy chủ, trả mã lỗi 400.
+- **Xóa bỏ chế độ mô phỏng Data URI rác:** Khi thiếu `IMGBB_API_KEY`, máy chủ trả lỗi rõ ràng `'Chưa cấu hình IMGBB_API_KEY trên máy chủ'`, tuyệt đối không sinh Data URI base64 lưu vào database.
+- **Ràng buộc URL ảnh nghiêm ngặt:** Hàm `validateImageUrl` chỉ chấp nhận giao thức bảo mật `https://` và thuộc tên miền ImgBB (`i.ibb.co` hoặc `ibb.co`).
+- **Bảo toàn dữ liệu khi tải ảnh lỗi:** Đã kiểm thử qua HTTP: khi việc tải ảnh mới bị lỗi hoặc bị từ chối, logo và hình nền hiện hữu trong database của vòng quay được giữ nguyên vẹn 100%.
+
 ---
 
 ## 3. CÁCH TỰ KIỂM TRA BẰNG MẮT (DÀNH CHO NGƯỜI DÙNG TRÊN ĐIỆN THOẠI)
@@ -116,6 +123,15 @@
 2. Mở link khách quay trên điện thoại và quay thử 10 lượt:
 3. **Quan sát:** Đa số các lượt quay (khoảng 8-9 lượt) kim sẽ dừng trúng ô "Chúc May Mắn".
 4. Mở lại trang Admin -> "Lịch sử quay thưởng": Kiểm tra các dòng lịch sử vừa ghi, tên món quà trong lịch sử khớp chính xác 100% với từng món quà khách vừa nhận được trên điện thoại.
+
+### Cách kiểm tra mục [C]:
+1. Vào trang Admin, chọn mục tải Logo:
+   - Thử chọn một bức ảnh quá 4MB hoặc một tệp không phải ảnh (file .pdf, .svg): Hệ thống hiện thông báo lỗi tiếng Việt dễ hiểu và từ chối tải lên.
+   - Logo cũ đang có của quán vẫn giữ nguyên vẹn trên màn hình xem trước và không bị mất.
+2. Tải lên một ảnh PNG/JPG hợp lệ:
+   - Màn hình xem trước hiển thị ngay ảnh mới.
+   - Mã QR xem trước ở bên dưới tự động lồng logo mới vào chính giữa mã QR.
+   - Mở link khách trên điện thoại: Logo mới hiển thị sắc nét ở phần đầu trang và ở tâm của vòng quay.
 
 ---
 

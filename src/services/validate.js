@@ -143,19 +143,22 @@ function validateBackgroundOpacity(opacity) {
 }
 
 /**
- * Kiểm tra URL ảnh
+ * Kiểm tra URL ảnh lưu trữ: chỉ chấp nhận giao thức HTTPS và tên miền imgbb (i.ibb.co / ibb.co)
  */
 function validateImageUrl(url) {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();
   if (trimmed === '') return '';
-  // Chỉ chấp nhận HTTP/HTTPS và không chứa script
   try {
     const parsed = new URL(trimmed);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    if (parsed.protocol !== 'https:') {
       return '';
     }
-    return trimmed;
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === 'i.ibb.co' || hostname === 'ibb.co' || hostname.endsWith('.ibb.co')) {
+      return trimmed;
+    }
+    return '';
   } catch {
     return '';
   }
