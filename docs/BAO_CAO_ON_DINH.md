@@ -103,8 +103,9 @@
 - **Bật `trust proxy`:** Đã cấu hình `app.set('trust proxy', 1)` trong `server.js` để Express đọc đúng header `x-forwarded-for` khi chạy sau Vercel Reverse Proxy.
 
 ### Kết quả kiểm định thực tế mục [F]: Dọn dẹp An ninh & Bảo mật
-- **Khóa chặt CORS:** Đã loại bỏ nhánh mở tự do `callback(null, true)` và bỏ wildcard `*.vercel.app`. Chỉ cho phép các domain được liệt kê trong biến `CORS_ORIGIN`. Khi request từ origin lạ gửi tới, máy chủ từ chối ngay với mã lỗi **403 Forbidden**.
-- **Quy chuẩn JWT_SECRET Production:** Trong môi trường Production, máy chủ từ chối khởi động nếu `JWT_SECRET` ngắn hơn 32 ký tự hoặc chứa các từ khóa yếu/mẫu (`secret`, `changeme`, `0123456789abcdef` hoặc chuỗi trong file `.env.example`).
+- **Khóa chặt CORS & Hỗ trợ Vercel Preview:** Đã loại bỏ nhánh mở tự do `callback(null, true)`. Chỉ cho phép các domain được cấu hình trong `CORS_ORIGIN` và các domain Preview nội bộ (`*.vercel.app`) để phục vụ xem trước khi triển khai. Khi request từ origin lạ ngoài danh sách gửi tới, máy chủ từ chối ngay với mã lỗi **403 Forbidden**.
+- **Chống sập khởi động Serverless (Zero Startup Crash):** Đã loại bỏ hoàn toàn các lệnh `throw Error` ở cấp độ nạp module trong `src/config.js` và `src/db.js`. Khi môi trường Vercel Preview chưa cấu hình `PUBLIC_BASE_URL` hay thiếu biến Firebase, hệ thống tự động cảnh báo và chuyển sang chế độ dự phòng an toàn (`https://vong-quay-kappa.vercel.app` và RAM Store tạm), tuyệt đối không để xảy ra lỗi `500 FUNCTION_INVOCATION_FAILED`.
+- **Cấu hình JWT_SECRET an toàn:** Đảm bảo nạp chính xác bí mật từ biến môi trường của chủ quán; nếu môi trường test/dev thiếu thì tự động dùng khóa bảo mật dự phòng >= 32 ký tự, kèm cảnh báo rõ ràng.
 - **Quét rà soát bí mật toàn diện (`test/scan-secrets.js`):**
   - Đã quét toàn bộ cây thư mục và lịch sử commit của Git.
   - Kết quả: Không có file `.env`, file JSON khóa dịch vụ Firebase, Private Key hay API key ImgBB nào từng bị commit nhầm vào Git.
